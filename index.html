@@ -1,25 +1,21 @@
-HTML
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>My Tiny Axolotl</title>
+    <title>말랑말랑 아홀로트 키우기</title>
     <!-- Tailwind CSS (Web UI Layout & RectTransform) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&display=swap');
+        /* 둥글둥글 귀여운 '주아(Jua)' 한글 폰트 불러오기 */
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Fredoka+One&display=swap');
         
         body {
-            font-family: 'Quicksand', sans-serif;
+            font-family: 'Jua', 'Fredoka One', sans-serif;
             background-color: #0f172a;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-        }
-
-        .font-game {
-            font-family: 'Fredoka One', cursive;
         }
 
         /* Unity Game View 9:16 Simulation */
@@ -68,51 +64,60 @@ HTML
         .gauge-transition {
             transition: width 0.3s ease-out;
         }
+
+        /* 알림용 빨간 점 애니메이션 */
+        .badge-pulse {
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-0 m-0 overflow-hidden">
 
-    <!-- Main Canvas Wrapper -->
+    <!-- Main Canvas Wrapper (스마트폰 크기 캔버스 고정) -->
     <div class="game-container relative w-full h-full bg-slate-900 overflow-hidden flex flex-col rounded-[40px] border-8 border-slate-800">
         
         <!-- ================= [TOP UI] Status Sliders ================= -->
         <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
             <div class="flex justify-between items-center mb-2 px-1">
-                <div class="bg-pink-500/90 text-white font-game px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
-                    👑 <span id="pet-stage">Baby Axolotl (Lv.1)</span>
+                <div class="bg-pink-500/90 text-white px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
+                    👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
                 </div>
                 <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
-                    Bonus: <span id="happy-multiplier" class="font-game">x1.0</span>
+                    보너스: <span id="happy-multiplier">x1.0</span>
                 </div>
             </div>
             
-            <!-- Happiness XP Bar -->
+            <!-- Happiness XP Bar (행복 게이지) -->
             <div class="w-full bg-black/50 h-3 rounded-full overflow-hidden mb-3 border border-pink-400/20">
                 <div id="exp-bar" class="bg-gradient-to-r from-pink-400 to-rose-500 h-full gauge-transition" style="width: 0%"></div>
             </div>
 
-            <!-- 4 Core Stats Grid -->
+            <!-- 4 Core Stats Grid (한글 변환 완료) -->
             <div class="grid grid-cols-4 gap-1.5">
+                <!-- Hunger -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-orange-500/20 text-center">
-                    <div class="text-xs font-bold text-orange-300 flex justify-center items-center gap-0.5">🍗 Hunger</div>
+                    <div class="text-[11px] font-bold text-orange-300 flex justify-center items-center gap-0.5">🍗 배고픔</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-hunger" class="bg-orange-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
+                <!-- Thirst -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-sky-500/20 text-center">
-                    <div class="text-xs font-bold text-sky-300 flex justify-center items-center gap-0.5">💧 Thirst</div>
+                    <div class="text-[11px] font-bold text-sky-300 flex justify-center items-center gap-0.5">💧 목마름</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-thirst" class="bg-sky-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
+                <!-- Energy -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-indigo-500/20 text-center">
-                    <div class="text-xs font-bold text-indigo-300 flex justify-center items-center gap-0.5">💤 Energy</div>
+                    <div class="text-[11px] font-bold text-indigo-300 flex justify-center items-center gap-0.5">💤 피로도</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-energy" class="bg-indigo-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
+                <!-- Affection -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-green-500/20 text-center">
-                    <div class="text-xs font-bold text-green-300 flex justify-center items-center gap-0.5">⚽ Play</div>
+                    <div class="text-[11px] font-bold text-green-300 flex justify-center items-center gap-0.5">⚽ 놀이</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-affection" class="bg-green-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
@@ -145,17 +150,27 @@ HTML
             </div>
 
             <!-- Character Wrapper -->
-            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-20 cursor-pointer">
-                <div id="character-shadow" class="w-24 h-3 bg-black/10 rounded-full blur-[2px] transition-all duration-300 mb-2"></div>
+            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-24 cursor-pointer">
+                <!-- 아홀로트의 몸집에 맞춘 그림자 -->
+                <div id="character-shadow" class="w-36 h-3 bg-black/10 rounded-full blur-[2px] transition-all duration-300 mb-2"></div>
                 
-                <!-- 🎨 [UI Image Component] 
-                     기존의 이모지 텍스트를 지우고, 실제 피그마에서 가공한 이미지가 들어가는 HTML Image 태그로 변경되었습니다.
-                     이미지가 정상적으로 로드되지 않을 때를 대비해 기본적으로 귀여운 디폴트 텍스트(alt="Axolotl")를 지원합니다. -->
-                <img id="axolotl-avatar" class="axolotl-idle w-44 h-44 object-contain transition-all duration-300 transform" src="images/axolotl-happy.png" alt="Axolotl">
+                <!-- 캐릭터 부모 영역 스케일 유지 -->
+                <div id="avatar-container" class="w-72 h-72 flex items-center justify-center">
+                    <!-- Main Image Sprite -->
+                    <img id="axolotl-avatar" class="axolotl-idle w-full h-full object-contain transition-all duration-300 transform" 
+                         src="images/axolotl-happy.png" 
+                         alt="Axolotl" 
+                         onerror="handleImageError(this)">
+                    
+                    <!-- Backup Emoji Sprite -->
+                    <div id="emoji-fallback" class="axolotl-idle text-8xl hidden transition-all duration-300 transform">
+                        🌸
+                    </div>
+                </div>
 
-                <!-- Dialogue Balloon -->
-                <div id="status-bubble" class="absolute -top-12 bg-white/95 text-slate-800 font-bold px-4 py-1.5 rounded-2xl shadow-md border border-pink-100 text-xs transition-all text-center whitespace-nowrap">
-                    Hi there! 🌸
+                <!-- 말풍선 영역 (가독성을 위한 패딩 조절) -->
+                <div id="status-bubble" class="absolute -top-16 bg-white/95 text-slate-800 font-bold px-4 py-2 rounded-2xl shadow-md border border-pink-200 text-xs transition-all text-center whitespace-normal max-w-[200px]">
+                    안녕 예나야! 반가워! 🌸
                 </div>
             </div>
 
@@ -167,31 +182,31 @@ HTML
         <div class="relative z-20 px-6 py-2 bg-slate-950 border-t border-slate-900">
             <!-- Living Room Actions -->
             <div id="actions-living" class="hidden flex justify-around gap-2 py-2">
-                <button onclick="interactFeed()" class="bounce-hover flex-1 flex flex-col items-center bg-orange-50 hover:bg-orange-100 border border-orange-300 p-2 rounded-xl">
-                    <span class="text-xl">🍗</span>
-                    <span class="text-[11px] text-orange-800 font-bold mt-0.5">Feed</span>
+                <button onpointerdown="interactFeed()" class="bounce-hover flex-1 flex flex-col items-center bg-orange-50 hover:bg-orange-100 border border-orange-300 p-2.5 rounded-xl">
+                    <span class="text-2xl">🍗</span>
+                    <span class="text-[12px] text-orange-800 font-bold mt-0.5">맛있는 밥</span>
                 </button>
-                <button onclick="interactWater()" class="bounce-hover flex-1 flex flex-col items-center bg-sky-50 hover:bg-sky-100 border border-sky-300 p-2 rounded-xl">
-                    <span class="text-xl">💧</span>
-                    <span class="text-[11px] text-sky-800 font-bold mt-0.5">Water</span>
+                <button onpointerdown="interactWater()" class="bounce-hover flex-1 flex flex-col items-center bg-sky-50 hover:bg-sky-100 border border-sky-300 p-2.5 rounded-xl">
+                    <span class="text-2xl">💧</span>
+                    <span class="text-[12px] text-sky-800 font-bold mt-0.5">시원한 물</span>
                 </button>
-                <button onclick="interactBall()" class="bounce-hover flex-1 flex flex-col items-center bg-green-50 hover:bg-green-100 border border-green-300 p-2 rounded-xl">
-                    <span class="text-xl">⚽</span>
-                    <span class="text-[11px] text-green-800 font-bold mt-0.5">Play Ball</span>
+                <button onpointerdown="interactBall()" class="bounce-hover flex-1 flex flex-col items-center bg-green-50 hover:bg-green-100 border border-green-300 p-2.5 rounded-xl">
+                    <span class="text-2xl">⚽</span>
+                    <span class="text-[12px] text-green-800 font-bold mt-0.5">신나는 공놀이</span>
                 </button>
             </div>
 
             <!-- Bedroom Actions -->
             <div id="actions-bedroom" class="hidden flex justify-center py-2">
-                <button id="btn-sleep" onclick="toggleSleepMode()" class="bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-2.5 rounded-xl text-xs font-bold">
-                    <span id="sleep-icon">😴</span> <span id="sleep-text">Put to Sleep</span>
+                <button id="btn-sleep" onpointerdown="toggleSleepMode()" class="bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold">
+                    <span id="sleep-icon">😴</span> <span id="sleep-text">침대에서 코오 재우기</span>
                 </button>
             </div>
 
             <!-- Yard Actions -->
             <div id="actions-yard" class="flex justify-center py-2">
-                <div class="text-xs text-slate-500 font-bold py-1">
-                    🍃 Yard is for relaxing. Go to Living Room or Bedroom to take action!
+                <div class="text-xs text-slate-400 text-center font-bold py-1.5">
+                    🏡 마당은 쉬는 곳이에요. 아래의 🛋️ 거실이나 🛏️ 침실로 이동해서 펫을 돌봐주세요!
                 </div>
             </div>
         </div>
@@ -199,43 +214,71 @@ HTML
         <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
         <div class="relative z-20 bg-slate-950 pb-6 pt-2 px-4 border-t border-slate-900 flex justify-between items-center gap-2">
             <div class="flex-1 grid grid-cols-3 gap-1.5">
-                <button id="nav-yard" onclick="switchSpace('yard')" class="bounce-hover py-2 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
-                    🏡 Yard
+                <button id="nav-yard" onpointerdown="switchSpace('yard')" class="relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
+                    🏡 마당
                 </button>
-                <button id="nav-living" onclick="switchSpace('living')" class="bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
-                    🛋️ Living
+                <button id="nav-living" onpointerdown="switchSpace('living')" class="relative bounce-hover py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
+                    🛋️ 거실
+                    <span id="badge-living" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden">
+                        <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 badge-pulse"></span>
+                    </span>
                 </button>
-                <button id="nav-bedroom" onclick="switchSpace('bedroom')" class="bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
-                    🛏️ Bedroom
+                <button id="nav-bedroom" onpointerdown="switchSpace('bedroom')" class="relative bounce-hover py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
+                    🛏️ 침실
+                    <span id="badge-bedroom" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden">
+                        <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 badge-pulse"></span>
+                    </span>
                 </button>
             </div>
 
-            <button onclick="openMiniGame()" class="bounce-hover px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-bold flex items-center gap-1 text-xs animate-pulse">
-                🎮 Game
+            <button onpointerdown="openMiniGame()" class="bounce-hover px-3 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-bold flex items-center gap-1 text-xs animate-pulse">
+                🎮 게임하기
             </button>
         </div>
 
-        <!-- ================= [MINI GAME POPUP] ================= -->
+        <!-- ================= [MINI GAME POPUP (No Alert Window)] ================= -->
         <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
+            <!-- 게임 오버 팝업 내장 구조 설계 -->
             <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center">
-                <h3 class="text-lg font-game text-pink-400 mb-1">🎈 Bubble Pop!</h3>
-                <p class="text-xs text-slate-400 text-center mb-3">Pop bubbles to gain <span class="text-pink-300 font-bold">Happiness</span> and charge <span class="text-green-300 font-bold">Play Gauge</span>!</p>
                 
-                <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
-                    <div>Time: <span id="game-timer" class="font-bold text-rose-400">15s</span></div>
-                    <div>Score: <span id="game-score" class="font-bold text-pink-300">0</span></div>
+                <!-- [세부 화면 1: 시작 & 게임 플레이 화면] -->
+                <div id="mini-game-play-view" class="w-full flex flex-col items-center">
+                    <h3 class="text-lg font-game text-pink-400 mb-1">🎈 보글보글 방울 터뜨리기</h3>
+                    <p class="text-xs text-slate-400 text-center mb-3">방울을 터치해서 터뜨리면 아홀로트가 기뻐하고<br><span class="text-green-300 font-bold">놀이 지수</span>와 <span class="text-pink-300 font-bold">경험치</span>가 올라가요!</p>
+                    
+                    <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
+                        <div>시간제한: <span id="game-timer" class="font-bold text-rose-400">15초</span></div>
+                        <div>터뜨린 개수: <span id="game-score" class="font-bold text-pink-300">0</span></div>
+                    </div>
+
+                    <div id="game-canvas" class="relative w-full h-48 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"></div>
+
+                    <div class="flex gap-2 w-full mt-3 text-xs">
+                        <button id="btn-start" onpointerdown="startBubbleGame()" class="flex-1 bg-pink-500 text-white font-bold py-2 rounded-lg">
+                            게임 시작! 🚀
+                        </button>
+                        <button onpointerdown="closeMiniGame()" class="bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded-lg">
+                            닫기
+                        </button>
+                    </div>
                 </div>
 
-                <div id="game-canvas" class="relative w-full h-48 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"></div>
-
-                <div class="flex gap-2 w-full mt-3 text-xs">
-                    <button id="btn-start" onclick="startBubbleGame()" class="flex-1 bg-pink-500 text-white font-bold py-2 rounded-lg">
-                        Start Game 🚀
-                    </button>
-                    <button onclick="closeMiniGame()" class="bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded-lg">
-                        Close
+                <!-- [세부 화면 2: 결과 발표 화면 (기본 숨김)] -->
+                <div id="mini-game-result-view" class="w-full flex flex-col items-center hidden py-4">
+                    <span class="text-5xl mb-3">🎉</span>
+                    <h3 class="text-xl font-game text-yellow-400 mb-1">참 잘했어요!</h3>
+                    <p class="text-xs text-slate-300 text-center mb-4">
+                        예나가 비눗방울을 무려 <span id="res-score" class="text-pink-400 font-bold text-sm">0</span>개나 터뜨렸어요!
+                    </p>
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-full text-xs text-slate-400 space-y-1 mb-5">
+                        <div class="flex justify-between"><span>💖 획득한 행복 경험치:</span> <span id="res-xp" class="text-pink-300 font-bold">+0</span></div>
+                        <div class="flex justify-between"><span>⚽ 획득한 놀이 게이지:</span> <span id="res-play" class="text-green-300 font-bold">+0%</span></div>
+                    </div>
+                    <button onpointerdown="confirmResult()" class="w-full bg-green-500 text-white font-bold py-2.5 rounded-lg text-sm shadow-md">
+                        우파루파에게 칭찬받기 👍
                     </button>
                 </div>
+
             </div>
         </div>
 
@@ -257,12 +300,21 @@ HTML
         };
 
         const GROWTH_STAGES = {
-            1: { name: "Baby Axolotl 👶", scale: 0.85, multiplier: 1.0, threshold: 100 },
-            2: { name: "Junior Axolotl 👦", scale: 1.0, multiplier: 1.5, threshold: 250 },
-            3: { name: "Master Axolotl 👑", scale: 1.2, multiplier: 2.5, threshold: 99999 }
+            1: { name: "아기 아홀로트 👶", scale: 0.85, multiplier: 1.0, threshold: 100, happyEmoji: "🌸", sadEmoji: "🥺", sleepyEmoji: "🥱", angryEmoji: "😡" },
+            2: { name: "어린이 아홀로트 👦", scale: 1.0, multiplier: 1.5, threshold: 250, happyEmoji: "🐸", sadEmoji: "😭", sleepyEmoji: "💤", angryEmoji: "⚡" },
+            3: { name: "대장 아홀로트 👑", scale: 1.2, multiplier: 2.5, threshold: 99999, happyEmoji: "🐉", sadEmoji: "🥀", sleepyEmoji: "🌌", angryEmoji: "🔥" }
         };
 
-        // --- [2] 8-Bit Retro Sound Generator (Web Audio API) ---
+        let isImageBroken = false;
+
+        function handleImageError(imgElement) {
+            isImageBroken = true;
+            imgElement.style.display = 'none';
+            document.getElementById('emoji-fallback').style.display = 'block';
+            syncFacialExpression();
+        }
+
+        // --- [2] 8-Bit Retro Sound Generator ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, type = 'sine', duration = 0.1, delay = 0) {
             try {
@@ -281,7 +333,7 @@ HTML
             } catch (e) {}
         }
 
-        // --- [3] Save & Load System (PlayerPrefs) ---
+        // --- [3] Save & Load System ---
         function saveGameData() {
             gameData.lastSaved = Date.now();
             localStorage.setItem('AXOLOTL_MY_TINY_DATA', JSON.stringify(gameData));
@@ -311,7 +363,7 @@ HTML
             updateCanvasUI();
         }
 
-        // --- [4] UI Sync Engine (Canvas Controller) ---
+        // --- [4] UI Sync Engine ---
         function updateCanvasUI() {
             const percent = Math.min(100, (gameData.exp / gameData.maxExp) * 100);
             document.getElementById('exp-bar').style.width = `${percent}%`;
@@ -325,37 +377,86 @@ HTML
             document.getElementById('pet-stage').innerText = `${stage.name} (Lv.${gameData.level})`;
             document.getElementById('happy-multiplier').innerText = `x${stage.multiplier.toFixed(1)}`;
 
-            // 레벨에 따른 스케일 스케일러 조정 (Unity Transform.localScale)
             const avatar = document.getElementById('axolotl-avatar');
+            const fallback = document.getElementById('emoji-fallback');
             avatar.style.transform = `scale(${stage.scale})`;
+            fallback.style.transform = `scale(${stage.scale})`;
             document.getElementById('character-shadow').style.transform = `scale(${stage.scale})`;
 
             syncFacialExpression();
+            updateNotificationBadges();
         }
 
-        // --- [5] Smart Expression Resolver (Sprite Swapper) ---
+        // --- [5] Smart Expression & Location Hint Resolver (한글화 버전) ---
         function syncFacialExpression() {
             const avatar = document.getElementById('axolotl-avatar');
+            const fallback = document.getElementById('emoji-fallback');
             const bubble = document.getElementById('status-bubble');
             const s = gameData.stats;
+            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
 
-            // 🎨 [디자이너 에셋 스위처]
-            // 각 상태 분기에 맞춰 Sprite 이미지 경로(.src)가 실시간으로 교체됩니다.
             if (gameData.isSleeping) {
-                avatar.src = "images/axolotl-sleepy.png";
-                bubble.innerText = "Sleeping safely... Zzz 💤";
-            } else if (s.hunger < 35 || s.thirst < 35) {
-                avatar.src = "images/axolotl-angry.png";
-                bubble.innerText = "I'm hungry and thirsty! 😡";
-            } else if (s.energy < 35) {
-                avatar.src = "images/axolotl-sleepy.png";
-                bubble.innerText = "So tired... Let me sleep 🥱";
-            } else if (s.affection < 35) {
-                avatar.src = "images/axolotl-sad.png";
-                bubble.innerText = "Lonely.. Please play with me 🥺";
+                if (!isImageBroken) avatar.src = "images/axolotl-sleepy.png";
+                fallback.innerText = stage.sleepyEmoji;
+                bubble.innerText = "쿨쿨 자는 중... 쉿! Zzz 💤";
+            } 
+            // 1. 배고픔 / 목마름 상태 (거실 유도)
+            else if (s.hunger < 35 || s.thirst < 35) {
+                if (!isImageBroken) avatar.src = "images/axolotl-angry.png";
+                fallback.innerText = stage.angryEmoji;
+                
+                if (gameData.currentSpace !== 'living') {
+                    bubble.innerText = "우웅.. 배고프고 목말라요! 🛋️ 거실로 이동해주세요!";
+                } else {
+                    bubble.innerText = s.thirst < 35 ? "목말라요! 시원한 물 주세요! 💧" : "배고파요! 맛있는 밥 주세요! 🍗";
+                }
+            } 
+            // 2. 피로 누적 상태 (침실 유도)
+            else if (s.energy < 35) {
+                if (!isImageBroken) avatar.src = "images/axolotl-sleepy.png";
+                fallback.innerText = stage.sleepyEmoji;
+                
+                if (gameData.currentSpace !== 'bedroom') {
+                    bubble.innerText = "너무 졸려요... 🛏️ 침실로 데려가주세요!";
+                } else {
+                    bubble.innerText = "얼른 코오 재워주세요... 🥱💤";
+                }
+            } 
+            // 3. 심심함 상태 (거실 유도)
+            else if (s.affection < 35) {
+                if (!isImageBroken) avatar.src = "images/axolotl-sad.png";
+                fallback.innerText = stage.sadEmoji;
+                
+                if (gameData.currentSpace !== 'living') {
+                    bubble.innerText = "심심해요.. 🛋️ 거실로 가서 신나게 놀아요!";
+                } else {
+                    bubble.innerText = "저랑 공놀이 하거나 게임 같이 해요! 🥺⚽";
+                }
+            } 
+            // 4. 아주 행복한 상태
+            else {
+                if (!isImageBroken) avatar.src = "images/axolotl-happy.png";
+                fallback.innerText = stage.happyEmoji;
+                bubble.innerText = gameData.level >= 3 ? "우와! 저 이만큼 자랐어요! 예나 최고! ✨" : "말랑말랑 신나는 하루! 기분 최고! 🌸";
+            }
+        }
+
+        // --- [5-2] 알림 배지 처리 함수 ---
+        function updateNotificationBadges() {
+            const s = gameData.stats;
+            const badgeLiving = document.getElementById('badge-living');
+            const badgeBedroom = document.getElementById('badge-bedroom');
+
+            if ((s.hunger < 35 || s.thirst < 35 || s.affection < 35) && gameData.currentSpace !== 'living') {
+                badgeLiving.classList.remove('hidden');
             } else {
-                avatar.src = "images/axolotl-happy.png";
-                bubble.innerText = gameData.level >= 3 ? "Phenomenal day! Feeling grand! ✨" : "Wiggle wiggle! Happy day! 🌸";
+                badgeLiving.classList.add('hidden');
+            }
+
+            if (s.energy < 35 && gameData.currentSpace !== 'bedroom') {
+                badgeBedroom.classList.remove('hidden');
+            } else {
+                badgeBedroom.classList.add('hidden');
             }
         }
 
@@ -369,16 +470,16 @@ HTML
                 document.getElementById(`actions-${key}`).classList.add('hidden');
                 
                 const nav = document.getElementById(`nav-${key}`);
-                nav.className = "bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs";
+                nav.className = "bounce-hover py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs";
             });
 
             document.getElementById(`space-${spaceName}`).classList.remove('hidden');
             document.getElementById(`actions-${spaceName}`).classList.remove('hidden');
             
             const activeNav = document.getElementById(`nav-${spaceName}`);
-            if (spaceName === 'yard') activeNav.className = "bounce-hover py-2 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs";
-            if (spaceName === 'living') activeNav.className = "bounce-hover py-2 rounded-xl border border-amber-500 bg-amber-950 text-amber-300 font-bold text-xs";
-            if (spaceName === 'bedroom') activeNav.className = "bounce-hover py-2 rounded-xl border border-indigo-500 bg-indigo-950 text-indigo-300 font-bold text-xs";
+            if (spaceName === 'yard') activeNav.className = "relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs";
+            if (spaceName === 'living') activeNav.className = "relative bounce-hover py-2.5 rounded-xl border border-amber-500 bg-amber-950 text-amber-300 font-bold text-xs";
+            if (spaceName === 'bedroom') activeNav.className = "relative bounce-hover py-2.5 rounded-xl border border-indigo-500 bg-indigo-950 text-indigo-300 font-bold text-xs";
 
             document.getElementById('toy-ball').style.display = (spaceName === 'living') ? 'block' : 'none';
 
@@ -393,9 +494,13 @@ HTML
         charTarget.addEventListener('pointerdown', (e) => {
             if (gameData.isSleeping) return;
 
-            const av = document.getElementById('axolotl-avatar');
-            av.className = "w-44 h-44 object-contain transform axolotl-jump";
-            setTimeout(() => { av.className = "w-44 h-44 object-contain axolotl-idle"; }, 500);
+            const targetElement = isImageBroken ? document.getElementById('emoji-fallback') : document.getElementById('axolotl-avatar');
+            targetElement.classList.remove('axolotl-idle');
+            targetElement.classList.add('axolotl-jump');
+            setTimeout(() => { 
+                targetElement.classList.remove('axolotl-jump'); 
+                targetElement.classList.add('axolotl-idle'); 
+            }, 500);
 
             const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
             addHappinessPoints(Math.floor(8 * stage.multiplier), e.clientX, e.clientY);
@@ -447,8 +552,8 @@ HTML
 
         function interactWater() {
             if (gameData.isSleeping || gameData.stats.thirst >= 100) return;
-            gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 20);
-            addHappinessPoints(3);
+            gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 25);
+            addHappinessPoints(4);
             playSound(700, 'sine', 0.05);
             playSound(900, 'sine', 0.05, 0.05);
         }
@@ -474,15 +579,15 @@ HTML
             const layer = document.getElementById('bedroom-darkness');
 
             if (gameData.isSleeping) {
-                txt.innerText = "Wake Up";
+                txt.innerText = "아침이야! 깨우기";
                 icon.innerText = "☀️";
-                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-2.5 rounded-xl text-xs font-bold";
+                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-3 rounded-xl text-xs font-bold";
                 layer.style.filter = "brightness(0.3)";
                 playSound(200, 'sine', 0.3);
             } else {
-                txt.innerText = "Put to Sleep";
+                txt.innerText = "침실에서 코오 재우기";
                 icon.innerText = "😴";
-                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-2.5 rounded-xl text-xs font-bold";
+                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold";
                 layer.style.filter = "brightness(1)";
                 playSound(400, 'sine', 0.15);
             }
@@ -490,7 +595,7 @@ HTML
             saveGameData();
         }
 
-        // --- [8] Real-time Decay Loop (Update tick) ---
+        // --- [8] Real-time Decay Loop ---
         setInterval(() => {
             if (gameData.isSleeping) {
                 gameData.stats.energy = Math.min(100, gameData.stats.energy + 3);
@@ -499,24 +604,33 @@ HTML
             } else {
                 gameData.stats.hunger = Math.max(0, gameData.stats.hunger - 2);
                 gameData.stats.thirst = Math.max(0, gameData.stats.thirst - 2);
-                gameData.stats.energy = Math.max(0, gameData.stats.energy - 1);
+                gameData.stats.energy = Math.max(0, gameData.stats.energy - 1.5);
                 gameData.stats.affection = Math.max(0, gameData.stats.affection - 2.5);
             }
             updateCanvasUI();
             saveGameData();
         }, 4000);
 
-        // --- [9] Bubble Pop Mini Game Engine ---
+        // --- [9] Bubble Pop Mini Game Engine (Custom Modal) ---
         let gameInterval, gameTimer, gameScore, isRunning = false;
 
-        function openMiniGame() { document.getElementById('game-modal').style.display = 'flex'; }
-        function closeMiniGame() { document.getElementById('game-modal').style.display = 'none'; stopGameLoop(); }
+        function openMiniGame() { 
+            // 팝업 켤 때 항상 플레이 뷰가 먼저 보이게 초기화
+            document.getElementById('mini-game-play-view').classList.remove('hidden');
+            document.getElementById('mini-game-result-view').classList.add('hidden');
+            document.getElementById('game-modal').style.display = 'flex'; 
+        }
+        
+        function closeMiniGame() { 
+            document.getElementById('game-modal').style.display = 'none'; 
+            stopGameLoop(); 
+        }
 
         function startBubbleGame() {
             if (isRunning) return;
             isRunning = true; gameScore = 0; gameTimer = 15;
             document.getElementById('game-score').innerText = gameScore;
-            document.getElementById('game-timer').innerText = `${gameTimer}s`;
+            document.getElementById('game-timer').innerText = `${gameTimer}초`;
             document.getElementById('btn-start').disabled = true;
 
             const cv = document.getElementById('game-canvas');
@@ -541,7 +655,7 @@ HTML
 
             const clock = setInterval(() => {
                 gameTimer--;
-                document.getElementById('game-timer').innerText = `${gameTimer}s`;
+                document.getElementById('game-timer').innerText = `${gameTimer}초`;
                 if (gameTimer <= 0) { clearInterval(clock); finishMiniGame(); }
             }, 1000);
         }
@@ -551,14 +665,36 @@ HTML
             document.getElementById('btn-start').disabled = false;
         }
 
+        // 결과 발표화면 전환 로직 (alert 완전 삭제)
+        let pendingExpReward = 0;
+        let pendingPlayReward = 0;
+
         function finishMiniGame() {
             stopGameLoop();
             const multi = GROWTH_STAGES[gameData.level].multiplier;
-            const expGained = Math.floor(gameScore * 6 * multi);
-            gameData.stats.affection = Math.min(100, gameData.stats.affection + (gameScore * 3));
+            pendingExpReward = Math.floor(gameScore * 6 * multi);
+            pendingPlayReward = Math.min(100, gameData.stats.affection + (gameScore * 3)) - gameData.stats.affection;
             
-            alert(`🎉 Game Over!\nScore: ${gameScore} Bubbles\n\n🎁 Rewards:\nHappiness XP: +${expGained}\nPlay Stat Charged!`);
-            addHappinessPoints(expGained);
+            // 데이터 우선 충전 반영
+            gameData.stats.affection = Math.min(100, gameData.stats.affection + (gameScore * 3));
+
+            // 소리 피드백
+            playSound(440, 'triangle', 0.1);
+            playSound(554, 'triangle', 0.1, 0.08);
+            playSound(659, 'triangle', 0.2, 0.16);
+
+            // UI 뷰 전환 (플레이창 감추고 결과창 보여주기)
+            document.getElementById('mini-game-play-view').classList.add('hidden');
+            document.getElementById('mini-game-result-view').classList.remove('hidden');
+
+            document.getElementById('res-score').innerText = gameScore;
+            document.getElementById('res-xp').innerText = `+${pendingExpReward}`;
+            document.getElementById('res-play').innerText = `+${Math.floor(pendingPlayReward)}%`;
+        }
+
+        function confirmResult() {
+            // 보상 최종 지급 처리
+            addHappinessPoints(pendingExpReward);
             closeMiniGame();
         }
 
@@ -566,4 +702,3 @@ HTML
     </script>
 </body>
 </html>
-```eof
