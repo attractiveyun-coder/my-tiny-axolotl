@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Tiny Axolotl</title>
+    <!-- Tailwind CSS (Web UI Layout & RectTransform) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0f172a;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Unity Game View 9:16 Simulation */
+        .game-container {
+            max-width: 430px;
+            aspect-ratio: 9 / 16;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        .bounce-hover:active {
+            transform: scale(0.92);
+            transition: transform 0.1s ease;
+        }
+
+        /* Idle Animation (Breathe) */
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-6px) scale(1.03, 0.97); }
+        }
+        .axolotl-idle {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        /* Jump Trigger Animation */
+        @keyframes jump {
+            0% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(8px) scale(1.1, 0.8); }
+            50% { transform: translateY(-35px) scale(0.9, 1.1); }
+            80% { transform: translateY(4px) scale(1.04, 0.96); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        .axolotl-jump {
+            animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-90px) scale(1.2); opacity: 0; }
+        }
+        .particle {
+            position: absolute;
+            animation: float-up 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .gauge-transition {
+            transition: width 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 m-0 overflow-hidden">
+
+    <!-- Main Canvas Wrapper -->
+    <div class="game-container relative w-full h-full bg-slate-900 overflow-hidden flex flex-col rounded-[40px] border-8 border-slate-800">
+        
+        <!-- ================= [TOP UI] Status Sliders ================= -->
+        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <div class="bg-pink-500/90 text-white font-game px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
+                    👑 <span id="pet-stage">Baby Axolotl (Lv.1)</span>
+                </div>
+                <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
+                    Bonus: <span id="happy-multiplier" class="font-game">x1.0</span>
+                </div>
+            </div>
+            
+            <!-- Happiness XP Bar -->
+            <div class="w-full bg-black/50 h-3 rounded-full overflow-hidden mb-3 border border-pink-400/20">
+                <div id="exp-bar" class="bg-gradient-to-r from-pink-400 to-rose-500 h-full gauge-transition" style="width: 0%"></div>
+            </div>
+
+            <!-- 4 Core Stats Grid -->
+            <div class="grid grid-cols-4 gap-1.5">
+                <div class="bg-black/50 p-1.5 rounded-xl border border-orange-500/20 text-center">
+                    <div class="text-xs font-bold text-orange-300 flex justify-center items-center gap-0.5">🍗 Hunger</div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div id="stat-hunger" class="bg-orange-400 h-full gauge-transition" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="bg-black/50 p-1.5 rounded-xl border border-sky-500/20 text-center">
+                    <div class="text-xs font-bold text-sky-300 flex justify-center items-center gap-0.5">💧 Thirst</div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div id="stat-thirst" class="bg-sky-400 h-full gauge-transition" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="bg-black/50 p-1.5 rounded-xl border border-indigo-500/20 text-center">
+                    <div class="text-xs font-bold text-indigo-300 flex justify-center items-center gap-0.5">💤 Energy</div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div id="stat-energy" class="bg-indigo-400 h-full gauge-transition" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="bg-black/50 p-1.5 rounded-xl border border-green-500/20 text-center">
+                    <div class="text-xs font-bold text-green-300 flex justify-center items-center gap-0.5">⚽ Play</div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div id="stat-affection" class="bg-green-400 h-full gauge-transition" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= [CENTER AREA] Environment & Character ================= -->
+        <div id="game-space" class="relative flex-1 w-full flex items-center justify-center transition-all duration-500">
+            
+            <!-- Yard Background Layer -->
+            <div id="space-yard" class="absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-gradient-to-b from-sky-200 to-emerald-100"></div>
+                <div class="absolute bottom-24 left-6 text-4xl opacity-80">🌳</div>
+                <div class="absolute bottom-20 right-8 text-3xl opacity-80">🌻</div>
+            </div>
+
+            <!-- Living Room Background Layer -->
+            <div id="space-living" class="absolute inset-0 z-0 hidden">
+                <div class="absolute inset-0 bg-gradient-to-b from-amber-50 to-orange-100"></div>
+                <div class="absolute bottom-24 left-6 text-4xl opacity-80">🪴</div>
+                <div class="absolute bottom-28 right-8 text-5xl opacity-40">🪟</div>
+            </div>
+
+            <!-- Bedroom Background Layer -->
+            <div id="space-bedroom" class="absolute inset-0 z-0 hidden">
+                <div id="bedroom-darkness" class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950"></div>
+                <div class="absolute top-28 right-12 text-4xl opacity-90">🌙</div>
+                <div class="absolute bottom-16 right-4 text-6xl opacity-80">🛌</div>
+            </div>
+
+            <!-- Character Wrapper -->
+            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-20 cursor-pointer">
+                <div id="character-shadow" class="w-24 h-3 bg-black/10 rounded-full blur-[2px] transition-all duration-300 mb-2"></div>
+                
+                <!-- 🎨 [UI Image Component] 
+                     기존의 이모지 텍스트를 지우고, 실제 피그마에서 가공한 이미지가 들어가는 HTML Image 태그로 변경되었습니다.
+                     이미지가 정상적으로 로드되지 않을 때를 대비해 기본적으로 귀여운 디폴트 텍스트(alt="Axolotl")를 지원합니다. -->
+                <img id="axolotl-avatar" class="axolotl-idle w-44 h-44 object-contain transition-all duration-300 transform" src="images/axolotl-happy.png" alt="Axolotl">
+
+                <!-- Dialogue Balloon -->
+                <div id="status-bubble" class="absolute -top-12 bg-white/95 text-slate-800 font-bold px-4 py-1.5 rounded-2xl shadow-md border border-pink-100 text-xs transition-all text-center whitespace-nowrap">
+                    Hi there! 🌸
+                </div>
+            </div>
+
+            <!-- Living Room Interaction Toy -->
+            <div id="toy-ball" class="absolute bottom-20 left-1/3 text-4xl hidden cursor-pointer transition-all duration-300 hover:scale-110">⚽</div>
+        </div>
+
+        <!-- ================= [MIDDLE CONTROL] Action Buttons ================= -->
+        <div class="relative z-20 px-6 py-2 bg-slate-950 border-t border-slate-900">
+            <!-- Living Room Actions -->
+            <div id="actions-living" class="hidden flex justify-around gap-2 py-2">
+                <button onclick="interactFeed()" class="bounce-hover flex-1 flex flex-col items-center bg-orange-50 hover:bg-orange-100 border border-orange-300 p-2 rounded-xl">
+                    <span class="text-xl">🍗</span>
+                    <span class="text-[11px] text-orange-800 font-bold mt-0.5">Feed</span>
+                </button>
+                <button onclick="interactWater()" class="bounce-hover flex-1 flex flex-col items-center bg-sky-50 hover:bg-sky-100 border border-sky-300 p-2 rounded-xl">
+                    <span class="text-xl">💧</span>
+                    <span class="text-[11px] text-sky-800 font-bold mt-0.5">Water</span>
+                </button>
+                <button onclick="interactBall()" class="bounce-hover flex-1 flex flex-col items-center bg-green-50 hover:bg-green-100 border border-green-300 p-2 rounded-xl">
+                    <span class="text-xl">⚽</span>
+                    <span class="text-[11px] text-green-800 font-bold mt-0.5">Play Ball</span>
+                </button>
+            </div>
+
+            <!-- Bedroom Actions -->
+            <div id="actions-bedroom" class="hidden flex justify-center py-2">
+                <button id="btn-sleep" onclick="toggleSleepMode()" class="bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-2.5 rounded-xl text-xs font-bold">
+                    <span id="sleep-icon">😴</span> <span id="sleep-text">Put to Sleep</span>
+                </button>
+            </div>
+
+            <!-- Yard Actions -->
+            <div id="actions-yard" class="flex justify-center py-2">
+                <div class="text-xs text-slate-500 font-bold py-1">
+                    🍃 Yard is for relaxing. Go to Living Room or Bedroom to take action!
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
+        <div class="relative z-20 bg-slate-950 pb-6 pt-2 px-4 border-t border-slate-900 flex justify-between items-center gap-2">
+            <div class="flex-1 grid grid-cols-3 gap-1.5">
+                <button id="nav-yard" onclick="switchSpace('yard')" class="bounce-hover py-2 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
+                    🏡 Yard
+                </button>
+                <button id="nav-living" onclick="switchSpace('living')" class="bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
+                    🛋️ Living
+                </button>
+                <button id="nav-bedroom" onclick="switchSpace('bedroom')" class="bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs">
+                    🛏️ Bedroom
+                </button>
+            </div>
+
+            <button onclick="openMiniGame()" class="bounce-hover px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-bold flex items-center gap-1 text-xs animate-pulse">
+                🎮 Game
+            </button>
+        </div>
+
+        <!-- ================= [MINI GAME POPUP] ================= -->
+        <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
+            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center">
+                <h3 class="text-lg font-game text-pink-400 mb-1">🎈 Bubble Pop!</h3>
+                <p class="text-xs text-slate-400 text-center mb-3">Pop bubbles to gain <span class="text-pink-300 font-bold">Happiness</span> and charge <span class="text-green-300 font-bold">Play Gauge</span>!</p>
+                
+                <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
+                    <div>Time: <span id="game-timer" class="font-bold text-rose-400">15s</span></div>
+                    <div>Score: <span id="game-score" class="font-bold text-pink-300">0</span></div>
+                </div>
+
+                <div id="game-canvas" class="relative w-full h-48 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"></div>
+
+                <div class="flex gap-2 w-full mt-3 text-xs">
+                    <button id="btn-start" onclick="startBubbleGame()" class="flex-1 bg-pink-500 text-white font-bold py-2 rounded-lg">
+                        Start Game 🚀
+                    </button>
+                    <button onclick="closeMiniGame()" class="bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded-lg">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================
+         [JAVASCRIPT SYSTEM CONTROL]
+         ========================================================== -->
+    <script>
+        // --- [1] Member State Variables ---
+        let gameData = {
+            level: 1,
+            exp: 0,
+            maxExp: 100,
+            stats: { hunger: 80, thirst: 70, energy: 90, affection: 50 },
+            currentSpace: 'yard',
+            isSleeping: false,
+            lastSaved: Date.now()
+        };
+
+        const GROWTH_STAGES = {
+            1: { name: "Baby Axolotl 👶", scale: 0.85, multiplier: 1.0, threshold: 100 },
+            2: { name: "Junior Axolotl 👦", scale: 1.0, multiplier: 1.5, threshold: 250 },
+            3: { name: "Master Axolotl 👑", scale: 1.2, multiplier: 2.5, threshold: 99999 }
+        };
+
+        // --- [2] 8-Bit Retro Sound Generator (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type = 'sine', duration = 0.1, delay = 0) {
+            try {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                }, delay * 1000);
+            } catch (e) {}
+        }
+
+        // --- [3] Save & Load System (PlayerPrefs) ---
+        function saveGameData() {
+            gameData.lastSaved = Date.now();
+            localStorage.setItem('AXOLOTL_MY_TINY_DATA', JSON.stringify(gameData));
+        }
+
+        function loadGameData() {
+            const saved = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    const offlineSecs = Math.floor((Date.now() - parsed.lastSaved) / 1000);
+                    const decay = Math.min(50, Math.floor(offlineSecs / 40));
+                    
+                    if (parsed.isSleeping) {
+                        parsed.stats.energy = Math.min(100, parsed.stats.energy + Math.floor(offlineSecs / 12));
+                        parsed.stats.hunger = Math.max(10, parsed.stats.hunger - decay);
+                        parsed.stats.thirst = Math.max(10, parsed.stats.thirst - decay);
+                    } else {
+                        parsed.stats.hunger = Math.max(10, parsed.stats.hunger - decay);
+                        parsed.stats.thirst = Math.max(10, parsed.stats.thirst - decay);
+                        parsed.stats.energy = Math.max(10, parsed.stats.energy - Math.floor(decay / 1.5));
+                        parsed.stats.affection = Math.max(10, parsed.stats.affection - decay);
+                    }
+                    gameData = parsed;
+                } catch (e) {}
+            }
+            updateCanvasUI();
+        }
+
+        // --- [4] UI Sync Engine (Canvas Controller) ---
+        function updateCanvasUI() {
+            const percent = Math.min(100, (gameData.exp / gameData.maxExp) * 100);
+            document.getElementById('exp-bar').style.width = `${percent}%`;
+
+            document.getElementById('stat-hunger').style.width = `${gameData.stats.hunger}%`;
+            document.getElementById('stat-thirst').style.width = `${gameData.stats.thirst}%`;
+            document.getElementById('stat-energy').style.width = `${gameData.stats.energy}%`;
+            document.getElementById('stat-affection').style.width = `${gameData.stats.affection}%`;
+
+            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
+            document.getElementById('pet-stage').innerText = `${stage.name} (Lv.${gameData.level})`;
+            document.getElementById('happy-multiplier').innerText = `x${stage.multiplier.toFixed(1)}`;
+
+            // 레벨에 따른 스케일 스케일러 조정 (Unity Transform.localScale)
+            const avatar = document.getElementById('axolotl-avatar');
+            avatar.style.transform = `scale(${stage.scale})`;
+            document.getElementById('character-shadow').style.transform = `scale(${stage.scale})`;
+
+            syncFacialExpression();
+        }
+
+        // --- [5] Smart Expression Resolver (Sprite Swapper) ---
+        function syncFacialExpression() {
+            const avatar = document.getElementById('axolotl-avatar');
+            const bubble = document.getElementById('status-bubble');
+            const s = gameData.stats;
+
+            // 🎨 [디자이너 에셋 스위처]
+            // 각 상태 분기에 맞춰 Sprite 이미지 경로(.src)가 실시간으로 교체됩니다.
+            if (gameData.isSleeping) {
+                avatar.src = "images/axolotl-sleepy.png";
+                bubble.innerText = "Sleeping safely... Zzz 💤";
+            } else if (s.hunger < 35 || s.thirst < 35) {
+                avatar.src = "images/axolotl-angry.png";
+                bubble.innerText = "I'm hungry and thirsty! 😡";
+            } else if (s.energy < 35) {
+                avatar.src = "images/axolotl-sleepy.png";
+                bubble.innerText = "So tired... Let me sleep 🥱";
+            } else if (s.affection < 35) {
+                avatar.src = "images/axolotl-sad.png";
+                bubble.innerText = "Lonely.. Please play with me 🥺";
+            } else {
+                avatar.src = "images/axolotl-happy.png";
+                bubble.innerText = gameData.level >= 3 ? "Phenomenal day! Feeling grand! ✨" : "Wiggle wiggle! Happy day! 🌸";
+            }
+        }
+
+        // --- [6] Scene/Space Navigation ---
+        function switchSpace(spaceName) {
+            gameData.currentSpace = spaceName;
+            const spaces = ['yard', 'living', 'bedroom'];
+            
+            spaces.forEach(key => {
+                document.getElementById(`space-${key}`).classList.add('hidden');
+                document.getElementById(`actions-${key}`).classList.add('hidden');
+                
+                const nav = document.getElementById(`nav-${key}`);
+                nav.className = "bounce-hover py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs";
+            });
+
+            document.getElementById(`space-${spaceName}`).classList.remove('hidden');
+            document.getElementById(`actions-${spaceName}`).classList.remove('hidden');
+            
+            const activeNav = document.getElementById(`nav-${spaceName}`);
+            if (spaceName === 'yard') activeNav.className = "bounce-hover py-2 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs";
+            if (spaceName === 'living') activeNav.className = "bounce-hover py-2 rounded-xl border border-amber-500 bg-amber-950 text-amber-300 font-bold text-xs";
+            if (spaceName === 'bedroom') activeNav.className = "bounce-hover py-2 rounded-xl border border-indigo-500 bg-indigo-950 text-indigo-300 font-bold text-xs";
+
+            document.getElementById('toy-ball').style.display = (spaceName === 'living') ? 'block' : 'none';
+
+            playSound(350, 'triangle', 0.1);
+            playSound(450, 'triangle', 0.1, 0.05);
+            updateCanvasUI();
+            saveGameData();
+        }
+
+        // --- [7] Core Interaction Loops ---
+        const charTarget = document.getElementById('character-target');
+        charTarget.addEventListener('pointerdown', (e) => {
+            if (gameData.isSleeping) return;
+
+            const av = document.getElementById('axolotl-avatar');
+            av.className = "w-44 h-44 object-contain transform axolotl-jump";
+            setTimeout(() => { av.className = "w-44 h-44 object-contain axolotl-idle"; }, 500);
+
+            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
+            addHappinessPoints(Math.floor(8 * stage.multiplier), e.clientX, e.clientY);
+
+            playSound(550, 'sine', 0.1);
+            playSound(680, 'sine', 0.1, 0.04);
+        });
+
+        function addHappinessPoints(amount, clickX = null, clickY = null) {
+            gameData.exp += amount;
+            
+            const spawnX = clickX || window.innerWidth / 2;
+            const spawnY = clickY || window.innerHeight / 2 - 40;
+            spawnHeartParticle(spawnX, spawnY);
+
+            if (gameData.exp >= gameData.maxExp && gameData.level < 3) {
+                gameData.level++;
+                gameData.exp = 0;
+                gameData.maxExp = GROWTH_STAGES[gameData.level].threshold;
+
+                playSound(440, 'triangle', 0.12);
+                playSound(554, 'triangle', 0.12, 0.08);
+                playSound(659, 'triangle', 0.12, 0.16);
+                playSound(880, 'triangle', 0.25, 0.24);
+            }
+            updateCanvasUI();
+            saveGameData();
+        }
+
+        function spawnHeartParticle(x, y) {
+            const p = document.createElement('div');
+            p.className = 'particle text-xl z-50';
+            const arts = ['❤️', '💖', '✨', '🫧'];
+            p.innerText = arts[Math.floor(Math.random() * arts.length)];
+            p.style.left = `${x - 10}px`;
+            p.style.top = `${y - 10}px`;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 800);
+        }
+
+        // Actions
+        function interactFeed() {
+            if (gameData.isSleeping || gameData.stats.hunger >= 100) return;
+            gameData.stats.hunger = Math.min(100, gameData.stats.hunger + 25);
+            addHappinessPoints(4);
+            playSound(300, 'triangle', 0.07);
+            playSound(200, 'triangle', 0.07, 0.08);
+        }
+
+        function interactWater() {
+            if (gameData.isSleeping || gameData.stats.thirst >= 100) return;
+            gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 20);
+            addHappinessPoints(3);
+            playSound(700, 'sine', 0.05);
+            playSound(900, 'sine', 0.05, 0.05);
+        }
+
+        function interactBall() {
+            if (gameData.isSleeping || gameData.stats.affection >= 100) return;
+            gameData.stats.affection = Math.min(100, gameData.stats.affection + 30);
+            
+            const ball = document.getElementById('toy-ball');
+            ball.style.transform = `translateY(-100px) rotate(180deg)`;
+            setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
+
+            addHappinessPoints(6);
+            playSound(250, 'sawtooth', 0.08);
+            playSound(400, 'sawtooth', 0.08, 0.06);
+        }
+
+        function toggleSleepMode() {
+            gameData.isSleeping = !gameData.isSleeping;
+            const btn = document.getElementById('btn-sleep');
+            const txt = document.getElementById('sleep-text');
+            const icon = document.getElementById('sleep-icon');
+            const layer = document.getElementById('bedroom-darkness');
+
+            if (gameData.isSleeping) {
+                txt.innerText = "Wake Up";
+                icon.innerText = "☀️";
+                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-2.5 rounded-xl text-xs font-bold";
+                layer.style.filter = "brightness(0.3)";
+                playSound(200, 'sine', 0.3);
+            } else {
+                txt.innerText = "Put to Sleep";
+                icon.innerText = "😴";
+                btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-2.5 rounded-xl text-xs font-bold";
+                layer.style.filter = "brightness(1)";
+                playSound(400, 'sine', 0.15);
+            }
+            updateCanvasUI();
+            saveGameData();
+        }
+
+        // --- [8] Real-time Decay Loop (Update tick) ---
+        setInterval(() => {
+            if (gameData.isSleeping) {
+                gameData.stats.energy = Math.min(100, gameData.stats.energy + 3);
+                gameData.stats.hunger = Math.max(0, gameData.stats.hunger - 1);
+                gameData.stats.thirst = Math.max(0, gameData.stats.thirst - 1);
+            } else {
+                gameData.stats.hunger = Math.max(0, gameData.stats.hunger - 2);
+                gameData.stats.thirst = Math.max(0, gameData.stats.thirst - 2);
+                gameData.stats.energy = Math.max(0, gameData.stats.energy - 1);
+                gameData.stats.affection = Math.max(0, gameData.stats.affection - 2.5);
+            }
+            updateCanvasUI();
+            saveGameData();
+        }, 4000);
+
+        // --- [9] Bubble Pop Mini Game Engine ---
+        let gameInterval, gameTimer, gameScore, isRunning = false;
+
+        function openMiniGame() { document.getElementById('game-modal').style.display = 'flex'; }
+        function closeMiniGame() { document.getElementById('game-modal').style.display = 'none'; stopGameLoop(); }
+
+        function startBubbleGame() {
+            if (isRunning) return;
+            isRunning = true; gameScore = 0; gameTimer = 15;
+            document.getElementById('game-score').innerText = gameScore;
+            document.getElementById('game-timer').innerText = `${gameTimer}s`;
+            document.getElementById('btn-start').disabled = true;
+
+            const cv = document.getElementById('game-canvas');
+            cv.innerHTML = '';
+
+            gameInterval = setInterval(() => {
+                const b = document.createElement('div');
+                const size = Math.floor(Math.random() * 15) + 25;
+                b.className = "absolute rounded-full bg-pink-400/30 border border-pink-200 cursor-pointer transition-all";
+                b.style.width = `${size}px`; b.style.height = `${size}px`;
+                b.style.left = `${Math.floor(Math.random() * (cv.clientWidth - size))}px`;
+                b.style.top = `${Math.floor(Math.random() * (cv.clientHeight - size))}px`;
+
+                b.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation(); b.remove(); gameScore++;
+                    document.getElementById('game-score').innerText = gameScore;
+                    playSound(600 + (gameScore * 20), 'sine', 0.04);
+                });
+                cv.appendChild(b);
+                setTimeout(() => b.remove(), 2500);
+            }, 500);
+
+            const clock = setInterval(() => {
+                gameTimer--;
+                document.getElementById('game-timer').innerText = `${gameTimer}s`;
+                if (gameTimer <= 0) { clearInterval(clock); finishMiniGame(); }
+            }, 1000);
+        }
+
+        function stopGameLoop() {
+            clearInterval(gameInterval); isRunning = false;
+            document.getElementById('btn-start').disabled = false;
+        }
+
+        function finishMiniGame() {
+            stopGameLoop();
+            const multi = GROWTH_STAGES[gameData.level].multiplier;
+            const expGained = Math.floor(gameScore * 6 * multi);
+            gameData.stats.affection = Math.min(100, gameData.stats.affection + (gameScore * 3));
+            
+            alert(`🎉 Game Over!\nScore: ${gameScore} Bubbles\n\n🎁 Rewards:\nHappiness XP: +${expGained}\nPlay Stat Charged!`);
+            addHappinessPoints(expGained);
+            closeMiniGame();
+        }
+
+        window.onload = function() { loadGameData(); switchSpace('yard'); }
+    </script>
+</body>
+</html>
+```eof
