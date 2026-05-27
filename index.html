@@ -57,29 +57,32 @@
             animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
-        /* 🎈 하트 풍선 상승용 물리 연출 키프레임 정의 (Unity Particle Curve와 일치) */
-        @keyframes balloon-float {
+        /* 🎈 [모션 리팩토링] 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 (탄성 흔들림 추가) */
+        @keyframes pop-float {
             0% {
-                transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
+                transform: translate3d(0, 0, 0) scale(0) rotate(0deg);
                 opacity: 0;
             }
             15% {
-                opacity: 0.95;
-                transform: translate3d(var(--drift-1), -40px, 0) scale(1.1) rotate(var(--rot-1));
+                transform: translate3d(var(--drift-x1), var(--drift-y1), 0) scale(1.3) rotate(var(--rot-1));
+                opacity: 1;
             }
-            80% {
-                opacity: 0.8;
+            30% {
+                transform: translate3d(var(--drift-x1), var(--drift-y1), 0) scale(0.95) rotate(var(--rot-1));
+            }
+            45% {
+                transform: translate3d(var(--drift-x2), var(--drift-y2), 0) scale(1.1) rotate(var(--rot-2));
             }
             100% {
-                transform: translate3d(var(--drift-2), -240px, 0) scale(0.6) rotate(var(--rot-2));
+                transform: translate3d(var(--drift-x3), var(--drift-y3), 0) scale(0.4) rotate(var(--rot-2));
                 opacity: 0;
             }
         }
         
-        /* cozy-particle 클래스로 명칭 통합 및 가속도 속성 탑재 */
+        /* cozy-particle 클래스에 엘라스틱 베이지어 가속도 곡선 할당 */
         .cozy-particle {
             position: absolute;
-            animation: balloon-float 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            animation: pop-float 1.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             pointer-events: none;
             will-change: transform, opacity;
         }
@@ -821,21 +824,26 @@
             }, 500);
 
             const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
-            addHappinessPoints(Math.floor(8 * stage.multiplier), e.clientX, e.clientY);
+            addHappinessPoints(Math.floor(8 * stage.multiplier), e.clientX, e.clientY, 'touch');
 
             playSound(550, 'sine', 0.1);
             playSound(680, 'sine', 0.1, 0.04);
         });
 
         // 밥 먹이기 등의 수치 회복 및 파티클 발사
-        function addHappinessPoints(amount, clickX = null, clickY = null) {
+        function addHappinessPoints(amount, clickX = null, clickY = null, type = 'touch') {
             gameData.exp += amount;
             
             const spawnX = clickX || window.innerWidth / 2;
             const spawnY = clickY || window.innerHeight / 2 - 40;
-            spawnHeartParticle(spawnX, spawnY);
 
-            if (gameData.exp >= gameData.maxExp && gameData.level < 3) {
+            // 🌸 [파티클 밀도 최적화] 동시에 무리 지어 날아가지 않도록 1~2개로 제한
+            const particleCount = Math.floor(Math.random() * 2) + 1; // 1개 또는 2개 랜덤 스폰
+            for (let i = 0; i < particleCount; i++) {
+                spawnHeartParticle(spawnX, spawnY, type);
+            }
+
+            if (gameData.exp >= gameData.maxExp && gameData.level < 4) {
                 gameData.level++;
                 gameData.exp = 0;
                 gameData.maxExp = GROWTH_STAGES[gameData.level].threshold;
@@ -852,42 +860,58 @@
         }
 
         // ==========================================
-        // 🚀 [디자인 개선] 하트 풍선 무작위 버스트 파티클 시스템 🚀
-        // 예나가 터치할 때마다 6개의 하트와 풍선들이 무작위로 화면을 수놓습니다.
+        // 🚀 [상호작용 연출 전면 고도화] 하트 풍선 탄성 팝 파티클 엔진 🚀
+        // 터치 타입에 따른 전용 파티클이 뿅 피어나 부드럽게 상승하다가 소멸합니다.
         // ==========================================
-        function spawnHeartParticle(x, y) {
-            const particleCount = 6;
+        function spawnHeartParticle(x, y, type = 'touch') {
             const container = document.body;
-            // 예나님이 가장 좋아하는 알록달록 파스텔 테마의 하트와 풍선 이모지 구성
-            const emojis = ['🎈', '💖', '💕', '💝', '🫧', '✨'];
-
-            for (let i = 0; i < particleCount; i++) {
-                const p = document.createElement('div');
-                p.className = 'cozy-particle text-2xl z-50';
-                p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-                
-                // 유니티 파티클 시스템(MinMax Curve)처럼 랜덤한 가중치를 속성으로 할당
-                const drift1 = (Math.random() * 80 - 40) + 'px';
-                const drift2 = (Math.random() * 160 - 80) + 'px';
-                const rot1 = (Math.random() * 30 - 15) + 'deg';
-                const rot2 = (Math.random() * 60 - 30) + 'deg';
-                
-                p.style.setProperty('--drift-1', drift1);
-                p.style.setProperty('--drift-2', drift2);
-                p.style.setProperty('--rot-1', rot1);
-                p.style.setProperty('--rot-2', rot2);
-
-                // 손가락 터치 위치 주위에 솜사탕처럼 살짝 흩뿌려 스폰
-                const offsetX = (Math.random() * 40 - 20);
-                const offsetY = (Math.random() * 40 - 20);
-                p.style.left = `${x + offsetX - 12}px`;
-                p.style.top = `${y + offsetY - 12}px`;
-
-                container.appendChild(p);
-                
-                // 1.5초 상승 연출 후 메모리 가비지 컬렉션(GC) 자동 삭제 수행
-                setTimeout(() => p.remove(), 1500);
+            
+            // 기획안에 근거한 상호작용 피드백별 테마 이모지 스위칭
+            let emojis = ['🌸', '💕']; // 일반 터치 교감 디폴트 (벚꽃 + 러블리 핑크하트)
+            if (type === 'feed') {
+                emojis = ['❤️', '💖', '💕', '💝']; // 맛있는 밥: 풍부한 하트 시리즈
+            } else if (type === 'water') {
+                emojis = ['✨', '🌟', '😊', '🙂']; // 시원한 물: 반짝이는 별 + 편안한 스마일
+            } else if (type === 'play') {
+                emojis = ['🎈', '🫧']; // 신나는 공놀이: 색색의 풍선 + 영롱한 비눗방울
             }
+
+            const p = document.createElement('div');
+            p.className = 'cozy-particle text-3xl z-50'; // 예나의 시야를 위해 살짝 크게 보정
+            p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            // 수평 무작위 오프셋 및 수직(Y축) 상승을 위한 CSS 3단계 지연 경로 변수 계산
+            const driftX1 = (Math.random() * 30 - 15) + 'px';
+            const driftY1 = -(Math.random() * 30 + 15) + 'px'; // 1차 팝업 (-15px ~ -45px)
+            
+            const driftX2 = (Math.random() * 60 - 30) + 'px';
+            const driftY2 = -(Math.random() * 50 + 60) + 'px'; // 2차 흔들림 (-60px ~ -110px)
+            
+            const driftX3 = (Math.random() * 100 - 50) + 'px';
+            const driftY3 = -(Math.random() * 100 + 150) + 'px'; // 최종 상승 및 소멸 경로 (-150px ~ -250px)
+            
+            const rot1 = (Math.random() * 20 - 10) + 'deg';
+            const rot2 = (Math.random() * 40 - 20) + 'deg';
+            
+            p.style.setProperty('--drift-x1', driftX1);
+            p.style.setProperty('--drift-y1', driftY1);
+            p.style.setProperty('--drift-x2', driftX2);
+            p.style.setProperty('--drift-y2', driftY2);
+            p.style.setProperty('--drift-x3', driftX3);
+            p.style.setProperty('--drift-y3', driftY3);
+            p.style.setProperty('--rot-1', rot1);
+            p.style.setProperty('--rot-2', rot2);
+
+            // 손가락 터치 타깃 주변으로 솜사탕처럼 스폰되게 오프셋 부여
+            const offsetX = (Math.random() * 20 - 10);
+            const offsetY = (Math.random() * 20 - 10);
+            p.style.left = `${x + offsetX - 16}px`;
+            p.style.top = `${y + offsetY - 16}px`;
+
+            container.appendChild(p);
+            
+            // 애니메이션 사이클인 1.6초 경과 즉시 DOM에서 영구 해제하여 메모리 보존
+            setTimeout(() => p.remove(), 1600);
         }
 
         // Actions
@@ -895,7 +919,7 @@
             resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.hunger >= 100) return;
             gameData.stats.hunger = Math.min(100, gameData.stats.hunger + 25);
-            addHappinessPoints(4);
+            addHappinessPoints(4, null, null, 'feed');
             playSound(300, 'triangle', 0.07);
             playSound(200, 'triangle', 0.07, 0.08);
         }
@@ -904,7 +928,7 @@
             resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.thirst >= 100) return;
             gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 25);
-            addHappinessPoints(4);
+            addHappinessPoints(4, null, null, 'water');
             playSound(700, 'sine', 0.05);
             playSound(900, 'sine', 0.05, 0.05);
         }
@@ -918,7 +942,7 @@
             ball.style.transform = `translateY(-100px) rotate(180deg)`;
             setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
 
-            addHappinessPoints(6);
+            addHappinessPoints(6, null, null, 'play');
             playSound(250, 'sawtooth', 0.08);
             playSound(400, 'sawtooth', 0.08, 0.06);
         }
