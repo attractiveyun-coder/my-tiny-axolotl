@@ -7,11 +7,17 @@
     <!-- Tailwind CSS (Web UI Layout & RectTransform) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 가독성이 대폭 개선된 '고운 돋움(Gowun Dodum)' 한글 폰트 적용 */
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Fredoka+One&display=swap');
+        /* 둥글둥글하면서도 뼈대가 곧아 가독성이 극대화된 '빙그레체(Binggrae)' 웹폰트 정의 */
+        @font-face {
+            font-family: 'Binggrae';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonnu-2@1.0/Binggrae.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
         
         body {
-            font-family: 'Gowun Dodum', 'Fredoka One', sans-serif;
+            font-family: 'Binggrae', 'Fredoka One', sans-serif;
             background-color: #0f172a;
             touch-action: manipulation;
             user-select: none;
@@ -51,14 +57,31 @@
             animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
-        @keyframes float-up {
-            0% { transform: translateY(0) scale(0.8); opacity: 1; }
-            100% { transform: translateY(-90px) scale(1.2); opacity: 0; }
+        /* 🎈 하트 풍선 상승용 물리 연출 키프레임 정의 (Unity Particle Curve와 일치) */
+        @keyframes balloon-float {
+            0% {
+                transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.95;
+                transform: translate3d(var(--drift-1), -40px, 0) scale(1.1) rotate(var(--rot-1));
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate3d(var(--drift-2), -240px, 0) scale(0.6) rotate(var(--rot-2));
+                opacity: 0;
+            }
         }
-        .particle {
+        
+        /* cozy-particle 클래스로 명칭 통합 및 가속도 속성 탑재 */
+        .cozy-particle {
             position: absolute;
-            animation: float-up 0.8s ease-out forwards;
+            animation: balloon-float 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
             pointer-events: none;
+            will-change: transform, opacity;
         }
 
         .gauge-transition {
@@ -97,8 +120,16 @@
                 <div class="bg-pink-500/90 text-white font-bold px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
                     👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
                 </div>
-                <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md mr-10">
-                    보너스: <span id="happy-multiplier">x1.0</span>
+                
+                <!-- 설정 버튼과 보너스 표시판을 서브 플렉스 박스로 병합하여 겹침 원천 차단 -->
+                <div class="flex items-center gap-2">
+                    <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
+                        보너스: <span id="happy-multiplier">x1.0</span>
+                    </div>
+                    <!-- 톱니바퀴 버튼을 레이아웃의 내부 컴포넌트로 통합 -->
+                    <button onpointerdown="openSettings()" class="text-xl bounce-hover bg-black/40 p-1.5 rounded-full border border-pink-400/20 leading-none">
+                        ⚙️
+                    </button>
                 </div>
             </div>
             
@@ -139,11 +170,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ⚙️ 우상단 보관소 설정 버튼 -->
-        <button onpointerdown="openSettings()" class="absolute top-8 right-4 z-40 text-2xl bounce-hover bg-black/40 p-2 rounded-full border border-pink-400/20">
-            ⚙️
-        </button>
 
         <!-- ================= [CENTER AREA] Environment & Character ================= -->
         <div id="game-space" class="relative flex-1 w-full flex items-center justify-center transition-all duration-500">
@@ -801,6 +827,7 @@
             playSound(680, 'sine', 0.1, 0.04);
         });
 
+        // 밥 먹이기 등의 수치 회복 및 파티클 발사
         function addHappinessPoints(amount, clickX = null, clickY = null) {
             gameData.exp += amount;
             
@@ -824,15 +851,43 @@
             saveGameData();
         }
 
+        // ==========================================
+        // 🚀 [디자인 개선] 하트 풍선 무작위 버스트 파티클 시스템 🚀
+        // 예나가 터치할 때마다 6개의 하트와 풍선들이 무작위로 화면을 수놓습니다.
+        // ==========================================
         function spawnHeartParticle(x, y) {
-            const p = document.createElement('div');
-            p.className = 'particle text-xl z-50';
-            const arts = ['❤️', '💖', '✨', '🫧'];
-            p.innerText = arts[Math.floor(Math.random() * arts.length)];
-            p.style.left = `${x - 10}px`;
-            p.style.top = `${y - 10}px`;
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 800);
+            const particleCount = 6;
+            const container = document.body;
+            // 예나님이 가장 좋아하는 알록달록 파스텔 테마의 하트와 풍선 이모지 구성
+            const emojis = ['🎈', '💖', '💕', '💝', '🫧', '✨'];
+
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'cozy-particle text-2xl z-50';
+                p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                // 유니티 파티클 시스템(MinMax Curve)처럼 랜덤한 가중치를 속성으로 할당
+                const drift1 = (Math.random() * 80 - 40) + 'px';
+                const drift2 = (Math.random() * 160 - 80) + 'px';
+                const rot1 = (Math.random() * 30 - 15) + 'deg';
+                const rot2 = (Math.random() * 60 - 30) + 'deg';
+                
+                p.style.setProperty('--drift-1', drift1);
+                p.style.setProperty('--drift-2', drift2);
+                p.style.setProperty('--rot-1', rot1);
+                p.style.setProperty('--rot-2', rot2);
+
+                // 손가락 터치 위치 주위에 솜사탕처럼 살짝 흩뿌려 스폰
+                const offsetX = (Math.random() * 40 - 20);
+                const offsetY = (Math.random() * 40 - 20);
+                p.style.left = `${x + offsetX - 12}px`;
+                p.style.top = `${y + offsetY - 12}px`;
+
+                container.appendChild(p);
+                
+                // 1.5초 상승 연출 후 메모리 가비지 컬렉션(GC) 자동 삭제 수행
+                setTimeout(() => p.remove(), 1500);
+            }
         }
 
         // Actions
@@ -885,7 +940,7 @@
                 icon.innerText = "☀️";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-3 rounded-xl text-xs font-bold";
                 
-                // 아늑한 간접등 호흡 연출 ON
+                // 아늑한 간접등 연출 ON
                 if (lampGlow) lampGlow.classList.add('lamp-active');
                 
                 // 캐릭터 지글지글 픽셀 테두리 제거 및 부드러운 역광 연출 활성화 (Sleep Glow)
