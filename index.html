@@ -24,11 +24,19 @@
             -webkit-user-select: none;
         }
 
-        /* Unity Game View 9:16 Simulation */
-        .game-container {
-            max-width: 430px;
-            aspect-ratio: 9 / 16;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        /* 📱 [모바일 대응 미디어 쿼리] 
+           PC/태블릿(화면 가로 768px 이상)에서만 9:16 스마트폰 시뮬레이터 프레임과 테두리를 적용합니다.
+           아이폰 8 등의 모바일 기기에서는 화면을 100% 꽉 채워 상하단 잘림과 스크롤을 원천 차단합니다. */
+        @media (min-width: 768px) {
+            .game-container {
+                max-width: 430px;
+                aspect-ratio: 9 / 16;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+                border-radius: 40px;
+                border-width: 8px;
+                border-color: #1e293b; /* slate-800 */
+                height: 85vh;
+            }
         }
 
         .bounce-hover:active {
@@ -57,7 +65,7 @@
             animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
-        /* 🎈 [모션 리팩토링] 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 (탄성 흔들림 추가) */
+        /* 🎈 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 (탄성 흔들림 추가) */
         @keyframes pop-float {
             0% {
                 transform: translate3d(0, 0, 0) scale(0) rotate(0deg);
@@ -112,13 +120,14 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-0 m-0 overflow-hidden">
+<body class="flex items-center justify-center min-h-screen md:min-h-screen p-0 m-0 overflow-hidden bg-slate-950">
 
-    <!-- Main Canvas Wrapper (스마트폰 크기 캔버스 고정) -->
-    <div class="game-container relative w-full h-full bg-slate-900 overflow-hidden flex flex-col rounded-[40px] border-8 border-slate-800">
+    <!-- Main Canvas Wrapper 
+         모바일 기기에서는 h-dvh (동적 뷰포트 높이)를 100% 꽉 채우고, PC에서는 85vh 높이의 시뮬레이터로 조작되게 구조를 개선했습니다. -->
+    <div class="game-container relative w-full h-dvh flex flex-col bg-slate-900 overflow-hidden">
         
         <!-- ================= [TOP UI] Status Sliders ================= -->
-        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
+        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-6 md:pt-8">
             <div class="flex justify-between items-center mb-2 px-1">
                 <div class="bg-pink-500/90 text-white font-bold px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
                     👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
@@ -224,8 +233,9 @@
                 <div class="absolute bottom-10 right-6 text-6xl opacity-80">🛌</div>
             </div>
 
-            <!-- Character Wrapper -->
-            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-24 cursor-pointer">
+            <!-- Character Wrapper 
+                 [세로 대응] 모바일의 좁은 상하 폭에 맞추어 상단 오프셋 패딩을 pt-24에서 pt-8(PC에선 pt-12)로 컴팩트하게 압축했습니다. -->
+            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-8 md:pt-12 cursor-pointer">
                 
                 <!-- 말풍선 영역 (자연스러운 세로 누적 흐름 설계) -->
                 <div id="status-bubble" class="mb-4 bg-white/95 text-slate-800 font-bold px-4 py-2 rounded-2xl shadow-md border border-pink-200 text-xs transition-all text-center whitespace-normal max-w-[200px] relative z-20">
@@ -288,7 +298,7 @@
         </div>
 
         <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
-        <div class="relative z-20 bg-slate-950 pb-6 pt-2 px-4 border-t border-slate-900 flex justify-between items-center gap-2">
+        <div class="relative z-20 bg-slate-950 pb-4 md:pb-6 pt-2 px-4 border-t border-slate-900 flex justify-between items-center gap-2">
             <div class="flex-1 grid grid-cols-3 gap-1.5">
                 <button id="nav-yard" onpointerdown="switchSpace('yard')" class="relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
                     🏡 마당
@@ -313,9 +323,9 @@
         </div>
 
         <!-- ================= [MINI GAME POPUP] ================= -->
+        <!-- [모바일 세로 가드] max-h-[90vh] 및 overflow-y-auto를 장착하여 아이폰 8에서도 모달 정보가 잘리지 않게 설계했습니다. -->
         <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
-            <!-- 게임 오버 팝업 내장 구조 설계 -->
-            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center">
+            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center max-h-[90vh] overflow-y-auto">
                 
                 <!-- [세부 화면 1: 시작 & 게임 플레이 화면] -->
                 <div id="mini-game-play-view" class="w-full flex flex-col items-center">
@@ -358,9 +368,10 @@
             </div>
         </div>
 
-        <!-- ================= ⚙️ [SETTINGS MODAL (Q1 & Q2)] ================= -->
+        <!-- ================= ⚙️ [SETTINGS MODAL] ================= -->
+        <!-- [모바일 세로 가드] 보관소 패널에도 max-h-[90vh] overflow-y-auto 세이프 적용 -->
         <div id="settings-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
-            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col relative text-slate-200">
+            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col relative text-slate-200 max-h-[90vh] overflow-y-auto">
                 <button onpointerdown="closeSettings()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-xl">✕</button>
                 <h3 class="text-lg font-game text-pink-400 mb-3 text-center">⚙️ 아홀로트 보관소</h3>
                 
@@ -402,7 +413,7 @@
             </div>
         </div>
 
-        <!-- ================= 🚨 [FLOATING TOAST MESSAGE (No Alert)] ================= -->
+        <!-- ================= 🚨 [FLOATING TOAST MESSAGE] ================= -->
         <div id="toast-message" class="absolute top-28 left-1/2 transform -translate-x-1/2 z-50 bg-slate-950/95 text-white border border-pink-400 text-xs py-2.5 px-4 rounded-xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none text-center font-bold tracking-wide min-w-[240px]">
             알림 메시지
         </div>
@@ -481,9 +492,9 @@
         };
 
         const GROWTH_STAGES = {
-            1: { name: "아기 아홀로트 👶", scale: 0.85, multiplier: 1.0, threshold: 100, happyEmoji: "🌸", sadEmoji: "🥺", sleepyEmoji: "🥱", angryEmoji: "😡" },
-            2: { name: "어린이 아홀로트 👦", scale: 1.0, multiplier: 1.5, threshold: 250, happyEmoji: "🐸", sadEmoji: "😭", sleepyEmoji: "💤", angryEmoji: "⚡" },
-            3: { name: "대장 아홀로트 👑", scale: 1.2, multiplier: 2.5, threshold: 99999, happyEmoji: "🐉", sadEmoji: "🥀", sleepyEmoji: "🌌", angryEmoji: "🔥" }
+            1: { name: "아기 아홀로트 👶", scale: 0.85, multiplier: 1.0, threshold: 100 },
+            2: { name: "어린이 아홀로트 👦", scale: 1.0, multiplier: 1.5, threshold: 250 },
+            3: { name: "대장 아홀로트 👑", scale: 1.2, multiplier: 2.5, threshold: 99999 }
         };
 
         let isImageBroken = false;
@@ -798,7 +809,7 @@
             playSound(350, 'triangle', 0.1);
             playSound(450, 'triangle', 0.1, 0.05);
 
-            // 침실에 들어가고 잘 때만 음악 재생, 그 외 방에서는 조용하게 가드 처리
+            // 침실에 들어가하고 잘 때만 음악 재생, 그 외 방에서는 조용하게 가드 처리
             if (spaceName === 'bedroom' && gameData.isSleeping) {
                 startLullaby();
             } else {
@@ -860,7 +871,7 @@
         }
 
         // ==========================================
-        // 🚀 [상호작용 연출 전면 고도화] 하트 풍선 탄성 팝 파티클 엔진 🚀
+        // 🚀 하트 풍선 탄성 팝 파티클 엔진 🚀
         // 터치 타입에 따른 전용 파티클이 뿅 피어나 부드럽게 상승하다가 소멸합니다.
         // ==========================================
         function spawnHeartParticle(x, y, type = 'touch') {
