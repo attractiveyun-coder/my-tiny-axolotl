@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>말랑말랑 아홀로트 키우기</title>
+
+    <!-- 🍎 아이폰 '홈 화면에 추가' 시 진짜 네이티브 앱처럼 상하단 바를 완전히 없애주는 iOS 전용 메타태그 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="말랑아홀로트">
+
     <!-- Tailwind CSS (Web UI Layout & RectTransform) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,28 +20,47 @@
             font-weight: normal;
             font-style: normal;
         }
+
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
-        
+
         body {
             font-family: 'Binggrae', 'Fredoka One', sans-serif;
             background-color: #0f172a;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 📱 [모바일 대응 미디어 쿼리] 
-           PC/태블릿(화면 가로 768px 이상)에서만 9:16 스마트폰 시뮬레이터 프레임과 테두리를 적용합니다.
-           아이폰 8 등의 모바일 기기에서는 화면을 100% 꽉 채워 상하단 잘림과 스크롤을 원천 차단합니다. */
+        /* 📱 [모바일 대응 미디어 쿼리 및 iOS 탭바 대응 높이 적용]
+           JS에서 구한 실제 뷰포트 높이인 var(--vh)를 기반으로 캔버스를 100% 채웁니다. */
+        .game-container {
+            width: 100%;
+            height: 100dvh;
+            height: calc(var(--vh, 1vh) * 100);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
         @media (min-width: 768px) {
             .game-container {
                 max-width: 430px;
-                aspect-ratio: 9 / 16;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+                height: 85vh;
+                height: calc(var(--vh, 1vh) * 85);
                 border-radius: 40px;
                 border-width: 8px;
                 border-color: #1e293b; /* slate-800 */
-                height: 85vh;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             }
         }
 
@@ -46,47 +71,72 @@
 
         /* Idle Animation (Breathe) */
         @keyframes breathe {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-6px) scale(1.03, 0.97); }
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-6px) scale(1.03, 0.97);
+            }
         }
+
         .axolotl-idle {
             animation: breathe 3s ease-in-out infinite;
         }
 
         /* Jump Trigger Animation */
         @keyframes jump {
-            0% { transform: translateY(0) scale(1); }
-            30% { transform: translateY(8px) scale(1.1, 0.8); }
-            50% { transform: translateY(-35px) scale(0.9, 1.1); }
-            80% { transform: translateY(4px) scale(1.04, 0.96); }
-            100% { transform: translateY(0) scale(1); }
+            0% {
+                transform: translateY(0) scale(1);
+            }
+
+            30% {
+                transform: translateY(8px) scale(1.1, 0.8);
+            }
+
+            50% {
+                transform: translateY(-35px) scale(0.9, 1.1);
+            }
+
+            80% {
+                transform: translateY(4px) scale(1.04, 0.96);
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+            }
         }
+
         .axolotl-jump {
             animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
-        /* 🎈 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 (탄성 흔들림 추가) */
+        /* 🎈 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 */
         @keyframes pop-float {
             0% {
                 transform: translate3d(0, 0, 0) scale(0) rotate(0deg);
                 opacity: 0;
             }
+
             15% {
                 transform: translate3d(var(--drift-x1), var(--drift-y1), 0) scale(1.3) rotate(var(--rot-1));
                 opacity: 1;
             }
+
             30% {
                 transform: translate3d(var(--drift-x1), var(--drift-y1), 0) scale(0.95) rotate(var(--rot-1));
             }
+
             45% {
                 transform: translate3d(var(--drift-x2), var(--drift-y2), 0) scale(1.1) rotate(var(--rot-2));
             }
+
             100% {
                 transform: translate3d(var(--drift-x3), var(--drift-y3), 0) scale(0.4) rotate(var(--rot-2));
                 opacity: 0;
             }
         }
-        
+
         /* cozy-particle 클래스에 엘라스틱 베이지어 가속도 곡선 할당 */
         .cozy-particle {
             position: absolute;
@@ -112,39 +162,52 @@
 
         /* 간접등 호흡 애니메이션 */
         @keyframes lamp-breathe {
-            0%, 100% { opacity: 0.3; transform: scale(1); filter: blur(16px); }
-            50% { opacity: 0.7; transform: scale(1.15); filter: blur(24px); }
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+                filter: blur(16px);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.15);
+                filter: blur(24px);
+            }
         }
+
         .lamp-active {
             animation: lamp-breathe 4s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen md:min-h-screen p-0 m-0 overflow-hidden bg-slate-950">
+<body>
 
-    <!-- Main Canvas Wrapper 
-         모바일 기기에서는 h-dvh (동적 뷰포트 높이)를 100% 꽉 채우고, PC에서는 85vh 높이의 시뮬레이터로 조작되게 구조를 개선했습니다. -->
-    <div class="game-container relative w-full h-dvh flex flex-col bg-slate-900 overflow-hidden">
-        
+    <!-- Main Canvas Wrapper -->
+    <div id="main-container" class="game-container relative bg-slate-900 flex flex-col">
+
         <!-- ================= [TOP UI] Status Sliders ================= -->
-        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-6 md:pt-8">
+        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
             <div class="flex justify-between items-center mb-2 px-1">
                 <div class="bg-pink-500/90 text-white font-bold px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
                     👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
                 </div>
-                
+
                 <!-- 설정 버튼과 보너스 표시판을 서브 플렉스 박스로 병합하여 겹침 원천 차단 -->
                 <div class="flex items-center gap-2">
                     <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
                         보너스: <span id="happy-multiplier">x1.0</span>
                     </div>
-                    <!-- 톱니바퀴 버튼을 레이아웃의 내부 컴포넌트로 통합 -->
+                    <!-- 📱 아이폰 사파리 탭바를 숨겨주는 전체화면 토글 버튼 -->
+                    <button onpointerdown="toggleFullscreen()" class="text-xl bounce-hover bg-black/40 p-1.5 rounded-full border border-pink-400/20 leading-none">
+                        📱
+                    </button>
+                    <!-- ⚙️ 설정 버튼 -->
                     <button onpointerdown="openSettings()" class="text-xl bounce-hover bg-black/40 p-1.5 rounded-full border border-pink-400/20 leading-none">
                         ⚙️
                     </button>
                 </div>
             </div>
-            
+
             <!-- Happiness XP Bar (행복 게이지) -->
             <div class="w-full bg-black/50 h-3 rounded-full overflow-hidden mb-3 border border-pink-400/20">
                 <div id="exp-bar" class="bg-gradient-to-r from-pink-400 to-rose-500 h-full gauge-transition" style="width: 0%"></div>
@@ -185,7 +248,7 @@
 
         <!-- ================= [CENTER AREA] Environment & Character ================= -->
         <div id="game-space" class="relative flex-1 w-full flex items-center justify-center transition-all duration-500">
-            
+
             <!-- Yard Background Layer (마당 데코 지면 정렬) -->
             <div id="space-yard" class="absolute inset-0 z-0">
                 <div class="absolute inset-0 bg-gradient-to-b from-sky-200 to-emerald-100"></div>
@@ -204,16 +267,13 @@
             <div id="space-bedroom" class="absolute inset-0 z-0 hidden">
                 <!-- 아늑하고 포근한 보랏빛 밤 벽면 필터 -->
                 <div id="bedroom-darkness" class="absolute inset-0 bg-gradient-to-b from-indigo-950/90 via-slate-900 to-slate-950 transition-all duration-500"></div>
-                
-                <!-- 🪟 아늑한 밤하늘 창문 (밤하늘 + 달 + 반짝이는 별) -->
+
+                <!-- 🪟 아늑한 밤하늘 창문 -->
                 <div class="absolute top-24 left-8 w-24 h-36 bg-slate-950 rounded-t-full border-4 border-slate-700 overflow-hidden shadow-inner flex flex-col items-center justify-center">
                     <div class="absolute inset-0 bg-gradient-to-b from-blue-950 via-slate-900 to-indigo-950"></div>
-                    <!-- 노란 초승달 -->
                     <div class="absolute top-4 right-4 text-xl animate-pulse">🌙</div>
-                    <!-- 반짝이는 아기별들 -->
                     <div class="absolute bottom-6 left-4 text-[10px] animate-ping">⭐</div>
                     <div class="absolute top-10 left-6 text-[8px] opacity-70">✨</div>
-                    <!-- 창문 격자 프레임 -->
                     <div class="absolute inset-y-0 w-0.5 bg-slate-700/40"></div>
                     <div class="absolute inset-x-0 h-0.5 bg-slate-700/40 top-1/2"></div>
                 </div>
@@ -233,23 +293,22 @@
                 <div class="absolute bottom-10 right-6 text-6xl opacity-80">🛌</div>
             </div>
 
-            <!-- Character Wrapper 
-                 [세로 대응] 모바일의 좁은 상하 폭에 맞추어 상단 오프셋 패딩을 pt-24에서 pt-8(PC에선 pt-12)로 컴팩트하게 압축했습니다. -->
-            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-8 md:pt-12 cursor-pointer">
-                
-                <!-- 말풍선 영역 (자연스러운 세로 누적 흐름 설계) -->
+            <!-- Character Wrapper -->
+            <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-10 md:pt-20 cursor-pointer">
+
+                <!-- 말풍선 영역 (가독성을 위해 자연스러운 세로 누적 흐름 설계) -->
                 <div id="status-bubble" class="mb-4 bg-white/95 text-slate-800 font-bold px-4 py-2 rounded-2xl shadow-md border border-pink-200 text-xs transition-all text-center whitespace-normal max-w-[200px] relative z-20">
-                    안녕 예나야! 반가워! 🌸
+                    안녕! 반가워! 🌸
                 </div>
 
                 <!-- 캐릭터 부모 영역 스케일 유지 -->
                 <div id="avatar-container" class="w-72 h-72 flex items-center justify-center">
                     <!-- Main Image Sprite -->
-                    <img id="axolotl-avatar" class="axolotl-idle w-full h-full object-contain transition-all duration-300 transform" 
-                         src="images/axolotl-happy.png" 
-                         alt="Axolotl" 
+                    <img id="axolotl-avatar" class="axolotl-idle w-full h-full object-contain transition-all duration-300 transform"
+                         src="images/axolotl-happy.png"
+                         alt="Axolotl"
                          onerror="handleImageError(this)">
-                    
+
                     <!-- Backup Emoji Sprite -->
                     <div id="emoji-fallback" class="axolotl-idle text-8xl hidden transition-all duration-300 transform">
                         🌸
@@ -298,7 +357,8 @@
         </div>
 
         <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
-        <div class="relative z-20 bg-slate-950 pb-4 md:pb-6 pt-2 px-4 border-t border-slate-900 flex justify-between items-center gap-2">
+        <!-- iOS 노치 및 사파리 탭바 대응을 위한 가변 패딩(pb-safe) 보완 -->
+        <div class="relative z-20 bg-slate-950 pt-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-slate-900 flex justify-between items-center gap-2">
             <div class="flex-1 grid grid-cols-3 gap-1.5">
                 <button id="nav-yard" onpointerdown="switchSpace('yard')" class="relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
                     🏡 마당
@@ -323,15 +383,14 @@
         </div>
 
         <!-- ================= [MINI GAME POPUP] ================= -->
-        <!-- [모바일 세로 가드] max-h-[90vh] 및 overflow-y-auto를 장착하여 아이폰 8에서도 모달 정보가 잘리지 않게 설계했습니다. -->
         <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
             <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center max-h-[90vh] overflow-y-auto">
-                
+
                 <!-- [세부 화면 1: 시작 & 게임 플레이 화면] -->
                 <div id="mini-game-play-view" class="w-full flex flex-col items-center">
                     <h3 class="text-lg font-game text-pink-400 mb-1">🎈 보글보글 방울 터뜨리기</h3>
                     <p class="text-xs text-slate-400 text-center mb-3">방울을 터치해서 터뜨리면 아홀로트가 기뻐하고<br><span class="text-green-300 font-bold">놀이 지수</span>와 <span class="text-pink-300 font-bold">경험치</span>가 올라가요!</p>
-                    
+
                     <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
                         <div>시간제한: <span id="game-timer" class="font-bold text-rose-400">15초</span></div>
                         <div>터뜨린 개수: <span id="game-score" class="font-bold text-pink-300">0</span></div>
@@ -354,7 +413,8 @@
                     <span class="text-5xl mb-3">🎉</span>
                     <h3 class="text-xl font-game text-yellow-400 mb-1">참 잘했어요!</h3>
                     <p class="text-xs text-slate-300 text-center mb-4">
-                        예나가 비눗방울을 무려 <span id="res-score" class="text-pink-400 font-bold text-sm">0</span>개나 터뜨렸어요!
+                        <!-- 👤 주인 이름 동적 치환 대상 노드 -->
+                        <span id="res-owner" class="text-pink-300 font-bold">주인님</span>이(가) 비눗방울을 무려 <span id="res-score" class="text-pink-400 font-bold text-sm">0</span>개나 터뜨렸어요!
                     </p>
                     <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-full text-xs text-slate-400 space-y-1 mb-5">
                         <div class="flex justify-between"><span>💖 획득한 행복 경험치:</span> <span id="res-xp" class="text-pink-300 font-bold">+0</span></div>
@@ -368,18 +428,28 @@
             </div>
         </div>
 
-        <!-- ================= ⚙️ [SETTINGS MODAL] ================= -->
-        <!-- [모바일 세로 가드] 보관소 패널에도 max-h-[90vh] overflow-y-auto 세이프 적용 -->
+        <!-- ================= ⚙️ [SETTINGS MODAL (보관소 및 커스텀 이름 변경)] ================= -->
         <div id="settings-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
             <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col relative text-slate-200 max-h-[90vh] overflow-y-auto">
                 <button onpointerdown="closeSettings()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-xl">✕</button>
                 <h3 class="text-lg font-game text-pink-400 mb-3 text-center">⚙️ 아홀로트 보관소</h3>
-                
+
+                <!-- 👤 [새로운 기믹] 돌보미 주인 이름 설정창 -->
+                <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
+                    <h4 class="text-xs text-pink-300 font-bold mb-1.5">👤 돌보미 이름 변경</h4>
+                    <div class="flex gap-1.5">
+                        <input id="owner-name-input" type="text" placeholder="이름을 입력하세요" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
+                        <button onpointerdown="updateOwnerName()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-3 py-1 rounded-lg text-xs transition-all bounce-hover">
+                            변경
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 클라우드 연동 섹션 -->
                 <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
                     <h4 class="text-xs text-pink-300 font-bold mb-1">☁️ 클라우드 실시간 동기화</h4>
                     <p id="cloud-save-status" class="text-[10px] text-slate-400 mb-2">클라우드 연결 상태 확인 중...</p>
-                    
+
                     <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between items-center bg-slate-900 px-2 py-1.5 rounded-lg text-xs">
                             <span class="text-slate-400">내 펫 고유 번호 (ID)</span>
@@ -392,7 +462,7 @@
                 </div>
 
                 <!-- 수동 텍스트 백업 섹션 -->
-                <div class="border border-slate-800 p-3 rounded-xl mb-4 bg-slate-950/50">
+                <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
                     <h4 class="text-xs text-pink-300 font-bold mb-1.5">💾 수동 비밀번호 백업 및 복구</h4>
                     <div class="flex flex-col gap-2">
                         <button onpointerdown="copyBackupCode()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-1.5 rounded-lg text-xs transition-all bounce-hover">
@@ -405,6 +475,15 @@
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- PWA 사용자 가이드 -->
+                <div class="border border-slate-800 p-3 rounded-xl mb-4 bg-pink-500/10 border-pink-400/20">
+                    <h4 class="text-xs text-pink-300 font-bold mb-1">⭐ 진짜 스마트폰 앱처럼 만들기</h4>
+                    <p class="text-[10px] text-slate-300 leading-relaxed">
+                        사파리 화면 하단의 <span class="text-pink-400 font-bold">[공유] 버튼(위 화살표 모양)</span>을 누르고 <span class="text-pink-400 font-bold">[홈 화면에 추가]</span>를 눌러주세요!<br>
+                        바탕화면에 아이콘이 생겨 사파리 탭바가 완전히 사라진 상태로 플레이할 수 있습니다.
+                    </p>
                 </div>
 
                 <button onpointerdown="closeSettings()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-lg text-xs">
@@ -430,8 +509,7 @@
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // 🚨 [핵심 해결책 1] 호이스팅을 활용한 전역 함수 강제 매핑 🚨
-        // 스크립트 시작 즉시 모든 기능 함수를 window에 우선 등록하여 버튼 먹통 차단
+        // 🚨 호이스팅을 활용한 전역 함수 강제 매핑 🚨
         // ==========================================
         window.switchSpace = switchSpace;
         window.interactFeed = interactFeed;
@@ -449,6 +527,18 @@
         window.importBackupCode = importBackupCode;
         window.copyShareLink = copyShareLink;
         window.showFloatingMessage = showFloatingMessage;
+        window.toggleFullscreen = toggleFullscreen;
+        window.updateOwnerName = updateOwnerName; // 새 전역 매핑 추가
+
+        // --- [0] iOS Safari 100vh 탭바 잘림 방지용 동기화 픽셀 엔진 ---
+        function resetViewportHeight() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        window.addEventListener('resize', resetViewportHeight);
+        window.addEventListener('orientationchange', resetViewportHeight);
+        resetViewportHeight();
 
         // --- [1] Firebase 환경 설정 초기화 (세이프가드 가동) ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -464,10 +554,6 @@
         let app, auth, db;
         let isFirebaseActive = false;
 
-        // ==========================================
-        // 🚨 [핵심 해결책 2] Try-Catch 세이프가드 격리 🚨
-        // Firebase 에러가 발생해도 로컬 스토리지 모드로 무중단 작동 보장
-        // ==========================================
         if (firebaseConfig) {
             try {
                 app = initializeApp(firebaseConfig);
@@ -475,13 +561,14 @@
                 db = getFirestore(app);
                 isFirebaseActive = true;
             } catch (e) {
-                console.warn("Firebase 활성화에 실패하여 로컬 단독 작동 모드로 안전하게 전환합니다.", e);
+                console.warn("Firebase 로딩 우회", e);
             }
         }
 
-        // --- [2] Member State Variables ---
+        // --- [2] Member State Variables (ownerName 추가) ---
         let gameData = {
-            petId: "", // 고유 공유 펫 ID (서버 식별자)
+            petId: "",
+            ownerName: "주인님", // 동적 이름 상태 변수 추가
             level: 1,
             exp: 0,
             maxExp: 100,
@@ -533,20 +620,19 @@
                     osc.start();
                     osc.stop(audioCtx.currentTime + duration);
                 }, delay * 1000);
-            } catch (e) {}
+            } catch (e) { }
         }
 
-        // 모바일 사운드 잠금 원천 타파를 위한 오디오 터치 리스너
         function resumeAudioContext() {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // --- [4-2] 8비트 자장가 멜로디 재생 엔진 (Brahms' Lullaby 루프 구조) ---
+        // --- [4-2] 8비트 자장가 멜로디 재생 엔진 ---
         let lullabyTimeoutId = null;
         let lullabyNoteIndex = 0;
-        
+
         const lullabyMelody = [
             { f: 329.63, d: 0.6 }, // E4
             { f: 329.63, d: 0.6 }, // E4
@@ -561,7 +647,7 @@
             { f: 440.00, d: 0.6 }, // A4
             { f: 440.00, d: 1.2 }, // A4
             { f: 392.00, d: 1.8 }, // G4
-            
+
             { f: 293.66, d: 0.6 }, // D4
             { f: 349.23, d: 0.6 }, // F4
             { f: 440.00, d: 1.2 }, // A4
@@ -575,11 +661,9 @@
                 stopLullaby();
                 return;
             }
-            
+
             const note = lullabyMelody[lullabyNoteIndex];
-            // 8비트 따뜻한 침실 무드를 전하는 triangle 파형 사용
             playSound(note.f, 'triangle', note.d - 0.05);
-            
             lullabyNoteIndex = (lullabyNoteIndex + 1) % lullabyMelody.length;
             lullabyTimeoutId = setTimeout(playLullabyStep, note.d * 1000);
         }
@@ -597,7 +681,31 @@
             }
         }
 
-        // --- [5] Floating Toast Message System (대체 안내창) ---
+        // --- [4-3] 📱 사파리 주소 바 / 탭 바 원터치 제거 전체화면 엔진 ---
+        function toggleFullscreen() {
+            resumeAudioContext();
+            const docElem = document.documentElement;
+
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen(); // iOS Safari
+                }
+                showFloatingMessage("📱 일반 화면으로 돌아왔어요.");
+            }
+            else {
+                if (docElem.requestFullscreen) {
+                    docElem.requestFullscreen();
+                } else if (docElem.webkitRequestFullscreen) {
+                    docElem.webkitRequestFullscreen(); // iOS Safari 완벽 강제 침투
+                }
+                showFloatingMessage("✨ 전체화면 완료! 사파리 탭바가 사라졌어요!");
+            }
+            setTimeout(resetViewportHeight, 300);
+        }
+
+        // --- [5] Floating Toast Message System ---
         function showFloatingMessage(msg) {
             const toast = document.getElementById('toast-message');
             toast.innerText = msg;
@@ -609,23 +717,20 @@
             }, 3000);
         }
 
-        // --- [6] 클라우드 고유 ID 생성기 (6자리 대문자 랜덤 코드) ---
+        // --- [6] 클라우드 고유 ID 생성기 ---
         function generatePetId() {
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        // --- [7] Save & Load System (Local & Cloud Sync) ---
+        // --- [7] Save & Load System ---
         function saveGameData() {
             gameData.lastSaved = Date.now();
             localStorage.setItem('AXOLOTL_MY_TINY_DATA', JSON.stringify(gameData));
-            
-            // 클라우드로 비동기 업로드 (방해 금지)
             savePetToCloud();
         }
 
         async function savePetToCloud() {
             if (!isFirebaseActive || !auth || !auth.currentUser || !gameData.petId) return;
-            // RULE 1: Strict Paths 규격 준수 (Public)
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pets', gameData.petId);
             try {
                 await retryWithBackoff(() => setDoc(docRef, gameData));
@@ -639,7 +744,6 @@
 
         async function loadPetFromCloud(petId) {
             if (!isFirebaseActive || !auth || !auth.currentUser) return;
-            // RULE 1: Strict Paths 규격 준수 (Public)
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pets', petId);
             try {
                 const docSnap = await retryWithBackoff(() => getDoc(docRef));
@@ -665,7 +769,7 @@
                     const parsed = JSON.parse(saved);
                     const offlineSecs = Math.floor((Date.now() - parsed.lastSaved) / 1000);
                     const decay = Math.min(50, Math.floor(offlineSecs / 40));
-                    
+
                     if (parsed.isSleeping) {
                         parsed.stats.energy = Math.min(100, parsed.stats.energy + Math.floor(offlineSecs / 12));
                         parsed.stats.hunger = Math.max(10, parsed.stats.hunger - decay);
@@ -677,15 +781,22 @@
                         parsed.stats.affection = Math.max(10, parsed.stats.affection - decay);
                     }
                     gameData = parsed;
-                } catch (e) {}
+                } catch (e) { }
             }
 
-            // 고유 펫 ID가 부여되지 않았을 시 즉시 신규 발행
             if (!gameData.petId) {
                 gameData.petId = generatePetId();
             }
-            
+            if (!gameData.ownerName) {
+                gameData.ownerName = "주인님"; // 신규 필드 마이그레이션 예외 가드
+            }
+
             document.getElementById('pet-id-display').innerText = gameData.petId;
+            document.getElementById('owner-name-input').value = gameData.ownerName;
+
+            const resOwner = document.getElementById('res-owner');
+            if (resOwner) resOwner.innerText = gameData.ownerName;
+
             updateCanvasUI();
         }
 
@@ -713,53 +824,53 @@
             updateNotificationBadges();
         }
 
-        // --- [9] Smart Expression & Location Hint Resolver ---
+        // --- [9] Smart Expression & Location Hint Resolver (주인 이름 연동) ---
         function syncFacialExpression() {
             const avatar = document.getElementById('axolotl-avatar');
             const fallback = document.getElementById('emoji-fallback');
             const bubble = document.getElementById('status-bubble');
             const s = gameData.stats;
-            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
+            const owner = gameData.ownerName || "주인님";
 
             if (gameData.isSleeping) {
                 if (!isImageBroken) avatar.src = "images/axolotl-sleepy.png";
-                fallback.innerText = stage.sleepyEmoji;
+                fallback.innerText = "🥱";
                 bubble.innerText = "쿨쿨 자는 중... 쉿! Zzz 💤";
-            } 
+            }
             else if (s.hunger < 35 || s.thirst < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-angry.png";
-                fallback.innerText = stage.angryEmoji;
-                
+                fallback.innerText = "😡";
+
                 if (gameData.currentSpace !== 'living') {
                     bubble.innerText = "우웅.. 배고프고 목말라요! 🛋️ 거실로 이동해주세요!";
                 } else {
                     bubble.innerText = s.thirst < 35 ? "목말라요! 시원한 물 주세요! 💧" : "배고파요! 맛있는 밥 주세요! 🍗";
                 }
-            } 
+            }
             else if (s.energy < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-sleepy.png";
-                fallback.innerText = stage.sleepyEmoji;
-                
+                fallback.innerText = "🥱";
+
                 if (gameData.currentSpace !== 'bedroom') {
                     bubble.innerText = "너무 졸려요... 🛏️ 침실로 데려가주세요!";
                 } else {
                     bubble.innerText = "얼른 코오 재워주세요... 🥱💤";
                 }
-            } 
+            }
             else if (s.affection < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-sad.png";
-                fallback.innerText = stage.sadEmoji;
-                
+                fallback.innerText = "🥺";
+
                 if (gameData.currentSpace !== 'living') {
                     bubble.innerText = "심심해요.. 🛋️ 거실로 가서 신나게 놀아요!";
                 } else {
                     bubble.innerText = "저랑 공놀이 하거나 게임 같이 해요! 🥺⚽";
                 }
-            } 
+            }
             else {
                 if (!isImageBroken) avatar.src = "images/axolotl-happy.png";
-                fallback.innerText = stage.happyEmoji;
-                bubble.innerText = gameData.level >= 3 ? "우와! 저 이만큼 자랐어요! 예나 최고! ✨" : "말랑말랑 신나는 하루! 기분 최고! 🌸";
+                fallback.innerText = "🌸";
+                bubble.innerText = gameData.level >= 3 ? "우와! 저 이만큼 자랐어요! " + owner + " 최고! ✨" : "안녕 " + owner + "! 나랑 신나게 놀자! 🌸";
             }
         }
 
@@ -787,18 +898,18 @@
             resumeAudioContext();
             gameData.currentSpace = spaceName;
             const spaces = ['yard', 'living', 'bedroom'];
-            
+
             spaces.forEach(key => {
                 document.getElementById(`space-${key}`).classList.add('hidden');
                 document.getElementById(`actions-${key}`).classList.add('hidden');
-                
+
                 const nav = document.getElementById(`nav-${key}`);
                 nav.className = "bounce-hover py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs";
             });
 
             document.getElementById(`space-${spaceName}`).classList.remove('hidden');
             document.getElementById(`actions-${spaceName}`).classList.remove('hidden');
-            
+
             const activeNav = document.getElementById(`nav-${spaceName}`);
             if (spaceName === 'yard') activeNav.className = "relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs";
             if (spaceName === 'living') activeNav.className = "relative bounce-hover py-2.5 rounded-xl border border-amber-500 bg-amber-950 text-amber-300 font-bold text-xs";
@@ -809,7 +920,6 @@
             playSound(350, 'triangle', 0.1);
             playSound(450, 'triangle', 0.1, 0.05);
 
-            // 침실에 들어가하고 잘 때만 음악 재생, 그 외 방에서는 조용하게 가드 처리
             if (spaceName === 'bedroom' && gameData.isSleeping) {
                 startLullaby();
             } else {
@@ -829,9 +939,9 @@
             const targetElement = isImageBroken ? document.getElementById('emoji-fallback') : document.getElementById('axolotl-avatar');
             targetElement.classList.remove('axolotl-idle');
             targetElement.classList.add('axolotl-jump');
-            setTimeout(() => { 
-                targetElement.classList.remove('axolotl-jump'); 
-                targetElement.classList.add('axolotl-idle'); 
+            setTimeout(() => {
+                targetElement.classList.remove('axolotl-jump');
+                targetElement.classList.add('axolotl-idle');
             }, 500);
 
             const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
@@ -841,20 +951,18 @@
             playSound(680, 'sine', 0.1, 0.04);
         });
 
-        // 밥 먹이기 등의 수치 회복 및 파티클 발사
         function addHappinessPoints(amount, clickX = null, clickY = null, type = 'touch') {
             gameData.exp += amount;
-            
+
             const spawnX = clickX || window.innerWidth / 2;
             const spawnY = clickY || window.innerHeight / 2 - 40;
 
-            // 🌸 [파티클 밀도 최적화] 동시에 무리 지어 날아가지 않도록 1~2개로 제한
-            const particleCount = Math.floor(Math.random() * 2) + 1; // 1개 또는 2개 랜덤 스폰
+            const particleCount = Math.floor(Math.random() * 2) + 1;
             for (let i = 0; i < particleCount; i++) {
                 spawnHeartParticle(spawnX, spawnY, type);
             }
 
-            if (gameData.exp >= gameData.maxExp && gameData.level < 4) {
+            if (gameData.exp >= gameData.maxExp && gameData.level < 3) {
                 gameData.level++;
                 gameData.exp = 0;
                 gameData.maxExp = GROWTH_STAGES[gameData.level].threshold;
@@ -863,7 +971,7 @@
                 playSound(554, 'triangle', 0.12, 0.08);
                 playSound(659, 'triangle', 0.12, 0.16);
                 playSound(880, 'triangle', 0.25, 0.24);
-                
+
                 showFloatingMessage(`🎉 축하합니다! ${GROWTH_STAGES[gameData.level].name}(으)로 성장했습니다!`);
             }
             updateCanvasUI();
@@ -872,38 +980,35 @@
 
         // ==========================================
         // 🚀 하트 풍선 탄성 팝 파티클 엔진 🚀
-        // 터치 타입에 따른 전용 파티클이 뿅 피어나 부드럽게 상승하다가 소멸합니다.
         // ==========================================
         function spawnHeartParticle(x, y, type = 'touch') {
             const container = document.body;
-            
-            // 기획안에 근거한 상호작용 피드백별 테마 이모지 스위칭
-            let emojis = ['🌸', '💕']; // 일반 터치 교감 디폴트 (벚꽃 + 러블리 핑크하트)
+
+            let emojis = ['🌸', '💕'];
             if (type === 'feed') {
-                emojis = ['❤️', '💖', '💕', '💝']; // 맛있는 밥: 풍부한 하트 시리즈
+                emojis = ['❤️', '💖', '💕', '💝'];
             } else if (type === 'water') {
-                emojis = ['✨', '🌟', '😊', '🙂']; // 시원한 물: 반짝이는 별 + 편안한 스마일
+                emojis = ['✨', '🌟', '😊', '🙂'];
             } else if (type === 'play') {
-                emojis = ['🎈', '🫧']; // 신나는 공놀이: 색색의 풍선 + 영롱한 비눗방울
+                emojis = ['🎈', '🫧'];
             }
 
             const p = document.createElement('div');
-            p.className = 'cozy-particle text-3xl z-50'; // 예나의 시야를 위해 살짝 크게 보정
+            p.className = 'cozy-particle text-3xl z-50';
             p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            
-            // 수평 무작위 오프셋 및 수직(Y축) 상승을 위한 CSS 3단계 지연 경로 변수 계산
+
             const driftX1 = (Math.random() * 30 - 15) + 'px';
-            const driftY1 = -(Math.random() * 30 + 15) + 'px'; // 1차 팝업 (-15px ~ -45px)
-            
+            const driftY1 = -(Math.random() * 30 + 15) + 'px';
+
             const driftX2 = (Math.random() * 60 - 30) + 'px';
-            const driftY2 = -(Math.random() * 50 + 60) + 'px'; // 2차 흔들림 (-60px ~ -110px)
-            
+            const driftY2 = -(Math.random() * 50 + 60) + 'px';
+
             const driftX3 = (Math.random() * 100 - 50) + 'px';
-            const driftY3 = -(Math.random() * 100 + 150) + 'px'; // 최종 상승 및 소멸 경로 (-150px ~ -250px)
-            
+            const driftY3 = -(Math.random() * 100 + 150) + 'px';
+
             const rot1 = (Math.random() * 20 - 10) + 'deg';
             const rot2 = (Math.random() * 40 - 20) + 'deg';
-            
+
             p.style.setProperty('--drift-x1', driftX1);
             p.style.setProperty('--drift-y1', driftY1);
             p.style.setProperty('--drift-x2', driftX2);
@@ -913,15 +1018,12 @@
             p.style.setProperty('--rot-1', rot1);
             p.style.setProperty('--rot-2', rot2);
 
-            // 손가락 터치 타깃 주변으로 솜사탕처럼 스폰되게 오프셋 부여
             const offsetX = (Math.random() * 20 - 10);
             const offsetY = (Math.random() * 20 - 10);
             p.style.left = `${x + offsetX - 16}px`;
             p.style.top = `${y + offsetY - 16}px`;
 
             container.appendChild(p);
-            
-            // 애니메이션 사이클인 1.6초 경과 즉시 DOM에서 영구 해제하여 메모리 보존
             setTimeout(() => p.remove(), 1600);
         }
 
@@ -944,11 +1046,12 @@
             playSound(900, 'sine', 0.05, 0.05);
         }
 
+        // 공놀이 상호작용
         function interactBall() {
             resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.affection >= 100) return;
             gameData.stats.affection = Math.min(100, gameData.stats.affection + 30);
-            
+
             const ball = document.getElementById('toy-ball');
             ball.style.transform = `translateY(-100px) rotate(180deg)`;
             setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
@@ -965,7 +1068,7 @@
             const btn = document.getElementById('btn-sleep');
             const txt = document.getElementById('sleep-text');
             const icon = document.getElementById('sleep-icon');
-            
+
             const avatar = document.getElementById('axolotl-avatar');
             const fallback = document.getElementById('emoji-fallback');
             const lampGlow = document.getElementById('bedroom-lamp-glow');
@@ -974,29 +1077,21 @@
                 txt.innerText = "아침이야! 깨우기";
                 icon.innerText = "☀️";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-3 rounded-xl text-xs font-bold";
-                
-                // 아늑한 간접등 연출 ON
+
                 if (lampGlow) lampGlow.classList.add('lamp-active');
-                
-                // 캐릭터 지글지글 픽셀 테두리 제거 및 부드러운 역광 연출 활성화 (Sleep Glow)
                 if (avatar) avatar.classList.add('sleep-glow');
                 if (fallback) fallback.classList.add('sleep-glow');
 
-                // 8비트 자장가 온
                 startLullaby();
             } else {
                 txt.innerText = "침실에서 코오 재우기";
                 icon.innerText = "😴";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold";
-                
-                // 아늑한 조명 원복
+
                 if (lampGlow) lampGlow.classList.remove('lamp-active');
-                
-                // 원래 렌더링 스타일로 조율 복구
                 if (avatar) avatar.classList.remove('sleep-glow');
                 if (fallback) fallback.classList.remove('sleep-glow');
 
-                // 자장가 오프
                 stopLullaby();
             }
             updateCanvasUI();
@@ -1022,16 +1117,16 @@
         // --- [14] Bubble Pop Mini Game Engine ---
         let gameInterval, gameTimer, gameScore, isRunning = false;
 
-        function openMiniGame() { 
+        function openMiniGame() {
             resumeAudioContext();
             document.getElementById('mini-game-play-view').classList.remove('hidden');
             document.getElementById('mini-game-result-view').classList.add('hidden');
-            document.getElementById('game-modal').style.display = 'flex'; 
+            document.getElementById('game-modal').style.display = 'flex';
         }
-        
-        function closeMiniGame() { 
-            document.getElementById('game-modal').style.display = 'none'; 
-            stopGameLoop(); 
+
+        function closeMiniGame() {
+            document.getElementById('game-modal').style.display = 'none';
+            stopGameLoop();
         }
 
         function startBubbleGame() {
@@ -1081,7 +1176,7 @@
             const multi = GROWTH_STAGES[gameData.level].multiplier;
             pendingExpReward = Math.floor(gameScore * 6 * multi);
             pendingPlayReward = Math.min(100, gameData.stats.affection + (gameScore * 3)) - gameData.stats.affection;
-            
+
             gameData.stats.affection = Math.min(100, gameData.stats.affection + (gameScore * 3));
 
             playSound(440, 'triangle', 0.1);
@@ -1091,6 +1186,7 @@
             document.getElementById('mini-game-play-view').classList.add('hidden');
             document.getElementById('mini-game-result-view').classList.remove('hidden');
 
+            document.getElementById('res-owner').innerText = gameData.ownerName; // 주인 이름 갱신
             document.getElementById('res-score').innerText = gameScore;
             document.getElementById('res-xp').innerText = `+${pendingExpReward}`;
             document.getElementById('res-play').innerText = `+${Math.floor(pendingPlayReward)}%`;
@@ -1101,15 +1197,29 @@
             closeMiniGame();
         }
 
-        // --- [15] ⚙️ Settings Modal & Q1/Q2 Data Operations ---
+        // --- [15] ⚙️ Settings Modal & Data Operations ---
         function openSettings() {
             resumeAudioContext();
             document.getElementById('pet-id-display').innerText = gameData.petId || '------';
+            document.getElementById('owner-name-input').value = gameData.ownerName || '주인님';
             document.getElementById('settings-modal').style.display = 'flex';
         }
 
         function closeSettings() {
             document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        // 👤 [새로운 기믹 구현] 주인님 이름 실시간 업데이트 모듈
+        function updateOwnerName() {
+            const newName = document.getElementById('owner-name-input').value.trim();
+            if (!newName) {
+                showFloatingMessage("✍️ 이름을 적어주세요!");
+                return;
+            }
+            gameData.ownerName = newName;
+            saveGameData();
+            updateCanvasUI();
+            showFloatingMessage(`👤 돌보미 이름이 '${newName}'(으)로 멋지게 변경되었습니다!`);
         }
 
         function executeCopy(text) {
@@ -1141,15 +1251,18 @@
             try {
                 const decodedJson = decodeURIComponent(atob(inputVal));
                 const parsedData = JSON.parse(decodedJson);
-                
+
                 if (parsedData && parsedData.stats && parsedData.level) {
                     gameData = parsedData;
                     if (!gameData.petId) {
                         gameData.petId = generatePetId();
                     }
+                    if (!gameData.ownerName) {
+                        gameData.ownerName = "주인님";
+                    }
                     saveGameData();
                     updateCanvasUI();
-                    showFloatingMessage("🎉 성공적으로 예나의 우파루파를 복구했습니다!");
+                    showFloatingMessage(`🎉 성공적으로 ${gameData.ownerName}님의 우파루파를 복구했습니다!`);
                     document.getElementById('backup-code-input').value = "";
                     closeSettings();
                 } else {
@@ -1179,8 +1292,7 @@
         };
 
         // --- [16] 무중단 초기 구동 및 마찰 없는 바인딩 연계 ---
-        window.onload = async function() {
-            // 터치 시작 시 오디오 활성화
+        window.onload = async function () {
             document.body.addEventListener('pointerdown', resumeAudioContext, { once: true });
 
             if (isFirebaseActive && auth) {
@@ -1194,7 +1306,7 @@
                     if (user) {
                         const urlParams = new URLSearchParams(window.location.search);
                         const urlPetId = urlParams.get('petId');
-                        
+
                         if (urlPetId) {
                             await loadPetFromCloud(urlPetId);
                         } else {
@@ -1205,7 +1317,6 @@
                     }
                 });
             } else {
-                // Firebase 미구동 시, 로컬 스토리지 데이터로 무중단 로딩 수행
                 loadLocalOrNewPet();
                 const statusLabel = document.getElementById('cloud-save-status');
                 if (statusLabel) {
@@ -1215,6 +1326,7 @@
             }
 
             switchSpace('yard');
+            resetViewportHeight();
         }
     </script>
 </body>
