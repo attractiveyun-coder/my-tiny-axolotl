@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>말랑말랑 아홀로트 키우기</title>
 
-    <!-- 🍎 아이폰 '홈 화면에 추가' 시 진짜 네이티브 앱처럼 상하단 바를 완전히 없애주는 iOS 전용 메타태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="말랑아홀로트">
 
-    <!-- Tailwind CSS (Web UI Layout & RectTransform) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 둥글둥글하면서도 뼈대가 곧아 가독성이 극대화된 '빙그레체(Binggrae)' 웹폰트 정의 */
@@ -39,8 +37,7 @@
             justify-content: center;
         }
 
-        /* 📱 [모바일 대응 미디어 쿼리 및 iOS 탭바 대응 높이 적용]
-           JS에서 구한 실제 뷰포트 높이인 var(--vh)를 기반으로 캔버스를 100% 채웁니다. */
+        /* JS에서 구한 실제 뷰포트 높이인 var(--vh)를 기반으로 캔버스를 100% 채웁니다. */
         .game-container {
             width: 100%;
             height: 100dvh;
@@ -111,7 +108,7 @@
             animation: jump 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
-        /* 🎈 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 */
+        /* 하트 풍선 팝 모션용 엘라스틱 수직 상승 키프레임 정의 */
         @keyframes pop-float {
             0% {
                 transform: translate3d(0, 0, 0) scale(0) rotate(0deg);
@@ -137,7 +134,6 @@
             }
         }
 
-        /* cozy-particle 클래스에 엘라스틱 베이지어 가속도 곡선 할당 */
         .cozy-particle {
             position: absolute;
             animation: pop-float 1.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -154,7 +150,7 @@
             animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
 
-        /* 자고 있을 때 우파루파 테두리 지글지글 현상 차단 및 따뜻한 광원 그림자 효과 (Cozy Halo Glow) */
+        /* 자고 있을 때 우파루파 테두리 그림자 효과 */
         .sleep-glow {
             filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.45));
             transition: filter 0.5s ease-in-out;
@@ -182,102 +178,104 @@
 </head>
 <body>
 
-    <!-- Main Canvas Wrapper -->
     <div id="main-container" class="game-container relative bg-slate-900 flex flex-col">
 
-        <!-- -->
-        <!-- ================= 📺 [TITLE SCREEN] ================= -->
-        <div id="title-screen" class="absolute inset-0 z-45 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-6 transition-all duration-500">
-            <!-- 🧪 [디자이너 전용 가드] 실시간 타이틀 뷰 스위칭 토글 버튼 -->
-            <button id="btn-dev-toggle" onpointerdown="toggleTitlePreview()" class="absolute top-4 left-4 z-50 bg-slate-800/80 text-[11px] text-slate-300 px-2.5 py-1.5 rounded-full border border-slate-700 hover:bg-slate-700 bounce-hover">
+        <div id="title-screen" class="absolute inset-0 z-50 bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 flex flex-col items-center justify-between p-8 text-center transition-all duration-500">
+
+            <button onpointerdown="toggleDesignerPreview(event)" class="absolute top-8 left-4 z-50 text-[10px] bg-white/10 hover:bg-white/20 text-slate-400 font-sans px-2 py-1 rounded-full border border-white/10">
                 🧪 신규 화면 미리보기
             </button>
 
-            <!-- Game Title -->
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 mb-1 tracking-wide text-center leading-snug">
-                말랑말랑<br>아홀로트 키우기
-            </h1>
-            <p class="text-xs text-slate-400 mb-8 font-bold font-game tracking-widest">MY TINY AXOLOTL</p>
-
-            <!-- Cute Center Deco Portrait -->
-            <div class="relative w-56 h-56 flex items-center justify-center mb-8 axolotl-idle">
-                <div class="absolute w-44 h-44 bg-pink-500/10 rounded-full blur-2xl"></div>
-                <!-- 3D 스타일 이미지 연계 로직 탑재 -->
-                <img id="title-axolotl" class="w-full h-full object-contain relative z-10"
-                     src="images/axolotl-happy.png"
-                     alt="Axolotl"
-                     onerror="this.style.display='none'; document.getElementById('title-emoji').classList.remove('hidden')">
-                <span id="title-emoji" class="text-8xl hidden relative z-10">🌸</span>
+            <div class="mt-16 space-y-2">
+                <div class="text-pink-400 font-game text-xs tracking-widest uppercase">My Tiny Pet</div>
+                <h1 class="text-3xl md:text-4xl text-white font-bold drop-shadow-[0_4px_12px_rgba(244,63,94,0.3)] tracking-wide">
+                    말랑말랑<br><span class="text-pink-300">아홀로트 키우기</span>
+                </h1>
+                <p id="title-sub-text" class="text-xs text-slate-400">나만의 소중한 찰흙 토이 펫을 보살펴주세요</p>
             </div>
 
-            <!-- 스마트 탭 플레이 인터랙션 버튼 박스 -->
-            <div class="w-full max-w-xs space-y-3.5 flex flex-col items-center">
-                <!-- 이어하기 버튼 (기존 세이브 기록 있을 때만 자동 등장) -->
-                <button id="btn-continue" onpointerdown="startGameFlow(true)" class="hidden w-full bounce-hover bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg border-2 border-pink-300 text-sm">
-                    💾 내 아홀로트 이어하기
-                </button>
-                <!-- 새시작 버튼 -->
-                <button id="btn-newgame" onpointerdown="triggerNewGameAlert()" class="w-full bounce-hover bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg border-2 border-pink-300 text-sm">
-                    🐣 새로운 아홀로트 분양받기
+            <div class="flex-1 flex flex-col items-center justify-center my-4">
+                <div class="w-64 h-64 flex items-center justify-center">
+                    <img id="title-avatar" class="axolotl-idle w-full h-full object-contain" src="images/axolotl-happy.png" alt="Axolotl Logo" onerror="this.src=''; this.nextElementSibling.classList.remove('hidden');">
+                    <div class="text-8xl hidden axolotl-idle">🌸</div>
+                </div>
+                <div class="w-32 h-2.5 bg-black/30 rounded-full blur-[2px] mt-2"></div>
+            </div>
+
+            <div class="w-full max-w-xs mb-10 space-y-3">
+
+                <button id="btn-continue" onpointerdown="actionContinue()" class="hidden w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-pink-500/20 text-base bounce-hover tracking-wide">
+                    내 아홀로트 이어하기 💾
                 </button>
 
-                <!-- 하단 최종 플레이어 데이터 이정표 레이블 -->
-                <p id="title-status-text" class="text-[11px] text-slate-400 text-center font-bold tracking-wide pt-2"></p>
+                <button id="btn-start-new" onpointerdown="actionStartNewClick()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-pink-500/20 text-base bounce-hover tracking-wide">
+                    새로운 아홀로트 분양받기 🐣
+                </button>
+
+                <div id="history-summary-text" class="text-[11px] text-slate-500 font-bold tracking-wide"></div>
             </div>
         </div>
 
-        <!-- ================= [TOP UI] Status Sliders ================= -->
+        <div id="confirm-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
+            <div class="bg-slate-900 border-2 border-rose-500 rounded-3xl p-6 w-full max-w-sm flex flex-col text-center text-slate-200">
+                <span class="text-5xl mb-3">⚠️</span>
+                <h3 class="text-lg font-bold text-rose-400 mb-2">정말 처음부터 다시 키울까요?</h3>
+                <p class="text-xs text-slate-400 leading-relaxed mb-5">
+                    새로 시작하면 지금 클라우드와 스마트폰에 저장된 소중한 아홀로트 정보가 <span class="text-rose-400 font-bold">모두 지워지고 1레벨로 돌아가요!</span><br>정말 괜찮은가요?
+                </p>
+                <div class="flex gap-2 w-full text-xs">
+                    <button onpointerdown="confirmResetExecute()" class="flex-1 bg-rose-600 text-white font-bold py-3 rounded-xl bounce-hover">
+                        네, 새로 키울래요 🥚
+                    </button>
+                    <button onpointerdown="closeConfirmModal()" class="flex-1 bg-slate-800 border border-slate-700 text-slate-300 font-bold py-3 rounded-xl bounce-hover">
+                        아니요! 돌아갈래요
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
             <div class="flex justify-between items-center mb-2 px-1">
                 <div class="bg-pink-500/90 text-white font-bold px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
                     👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
                 </div>
 
-                <!-- 설정 버튼과 보너스 표시판을 서브 플렉스 박스로 병합하여 겹침 원천 차단 -->
                 <div class="flex items-center gap-2">
                     <div class="bg-black/40 text-pink-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
                         보너스: <span id="happy-multiplier">x1.0</span>
                     </div>
-                    <!-- 📱 아이폰 사파리 탭바를 숨겨주는 전체화면 토글 버튼 -->
                     <button onpointerdown="toggleFullscreen()" class="text-xl bounce-hover bg-black/40 p-1.5 rounded-full border border-pink-400/20 leading-none">
                         📱
                     </button>
-                    <!-- ⚙️ 설정 버튼 -->
                     <button onpointerdown="openSettings()" class="text-xl bounce-hover bg-black/40 p-1.5 rounded-full border border-pink-400/20 leading-none">
                         ⚙️
                     </button>
                 </div>
             </div>
 
-            <!-- Happiness XP Bar (행복 게이지) -->
             <div class="w-full bg-black/50 h-3 rounded-full overflow-hidden mb-3 border border-pink-400/20">
                 <div id="exp-bar" class="bg-gradient-to-r from-pink-400 to-rose-500 h-full gauge-transition" style="width: 0%"></div>
             </div>
 
-            <!-- 4 Core Stats Grid -->
             <div class="grid grid-cols-4 gap-1.5">
-                <!-- Hunger -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-orange-500/20 text-center">
                     <div class="text-[11px] font-bold text-orange-300 flex justify-center items-center gap-0.5">🍗 배고픔</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-hunger" class="bg-orange-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
-                <!-- Thirst -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-sky-500/20 text-center">
                     <div class="text-[11px] font-bold text-sky-300 flex justify-center items-center gap-0.5">💧 목마름</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-thirst" class="bg-sky-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
-                <!-- Energy -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-indigo-500/20 text-center">
                     <div class="text-[11px] font-bold text-indigo-300 flex justify-center items-center gap-0.5">💤 피로도</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                         <div id="stat-energy" class="bg-indigo-400 h-full gauge-transition" style="width: 100%"></div>
                     </div>
                 </div>
-                <!-- Affection -->
                 <div class="bg-black/50 p-1.5 rounded-xl border border-green-500/20 text-center">
                     <div class="text-[11px] font-bold text-green-300 flex justify-center items-center gap-0.5">⚽ 놀이</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
@@ -287,29 +285,23 @@
             </div>
         </div>
 
-        <!-- ================= [CENTER AREA] Environment & Character ================= -->
         <div id="game-space" class="relative flex-1 w-full flex items-center justify-center transition-all duration-500">
 
-            <!-- Yard Background Layer (마당 데코 지면 정렬) -->
             <div id="space-yard" class="absolute inset-0 z-0">
                 <div class="absolute inset-0 bg-gradient-to-b from-sky-200 to-emerald-100"></div>
                 <div class="absolute bottom-10 left-8 text-5xl opacity-80">🌳</div>
                 <div class="absolute bottom-10 right-10 text-4xl opacity-80">🌻</div>
             </div>
 
-            <!-- Living Room Background Layer (거실 데코 지면 및 벽면 벽지 정렬) -->
             <div id="space-living" class="absolute inset-0 z-0 hidden">
                 <div class="absolute inset-0 bg-gradient-to-b from-amber-50 to-orange-100"></div>
                 <div class="absolute bottom-10 left-8 text-5xl opacity-80">🪴</div>
                 <div class="absolute top-36 right-10 text-5xl opacity-30">🪟</div>
             </div>
 
-            <!-- Bedroom Background Layer (침실 침대 지면 정렬 및 간접등 리뉴얼) -->
             <div id="space-bedroom" class="absolute inset-0 z-0 hidden">
-                <!-- 아늑하고 포근한 보랏빛 밤 벽면 필터 -->
                 <div id="bedroom-darkness" class="absolute inset-0 bg-gradient-to-b from-indigo-950/90 via-slate-900 to-slate-950 transition-all duration-500"></div>
 
-                <!-- 🪟 아늑한 밤하늘 창문 -->
                 <div class="absolute top-24 left-8 w-24 h-36 bg-slate-950 rounded-t-full border-4 border-slate-700 overflow-hidden shadow-inner flex flex-col items-center justify-center">
                     <div class="absolute inset-0 bg-gradient-to-b from-blue-950 via-slate-900 to-indigo-950"></div>
                     <div class="absolute top-4 right-4 text-xl animate-pulse">🌙</div>
@@ -319,54 +311,40 @@
                     <div class="absolute inset-x-0 h-0.5 bg-slate-700/40 top-1/2"></div>
                 </div>
 
-                <!-- 💡 아늑한 침실 간접등 (하단 정렬 기준 통일) -->
                 <div class="absolute bottom-10 left-10 flex flex-col items-center z-10">
-                    <!-- 은은한 노란색 조명 빛 퍼짐 (Radial Glow) -->
                     <div id="bedroom-lamp-glow" class="absolute -top-16 w-36 h-36 bg-amber-400/20 rounded-full blur-2xl transition-all duration-500"></div>
-                    <!-- 전등갓 -->
                     <div class="w-8 h-6 bg-amber-200 rounded-t-lg border border-amber-300 relative z-20 shadow-md"></div>
-                    <!-- 전등 기둥 -->
                     <div class="w-1.5 h-12 bg-slate-500 relative z-20"></div>
-                    <!-- 전등 받침 (지면 정렬) -->
                     <div class="w-8 h-2 bg-slate-600 rounded-full relative z-20"></div>
                 </div>
 
                 <div class="absolute bottom-10 right-6 text-6xl opacity-80">🛌</div>
             </div>
 
-            <!-- Character Wrapper -->
             <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-10 md:pt-20 cursor-pointer">
 
-                <!-- 말풍선 영역 (가독성을 위해 자연스러운 세로 누적 흐름 설계) -->
                 <div id="status-bubble" class="mb-4 bg-white/95 text-slate-800 font-bold px-4 py-2 rounded-2xl shadow-md border border-pink-200 text-xs transition-all text-center whitespace-normal max-w-[200px] relative z-20">
-                    안녕! 반가워! 🌸
+                    안녕! 나랑 신나게 놀자! 🌸
                 </div>
 
-                <!-- 캐릭터 부모 영역 스케일 유지 -->
                 <div id="avatar-container" class="w-72 h-72 flex items-center justify-center">
-                    <!-- Main Image Sprite -->
                     <img id="axolotl-avatar" class="axolotl-idle w-full h-full object-contain transition-all duration-300 transform"
                          src="images/axolotl-happy.png"
                          alt="Axolotl"
                          onerror="handleImageError(this)">
 
-                    <!-- Backup Emoji Sprite -->
                     <div id="emoji-fallback" class="axolotl-idle text-8xl hidden transition-all duration-300 transform">
                         🌸
                     </div>
                 </div>
 
-                <!-- 아홀로트의 몸집에 맞춘 그림자 -->
                 <div id="character-shadow" class="w-36 h-3 bg-black/10 rounded-full blur-[2px] transition-all duration-300 mt-2"></div>
             </div>
 
-            <!-- Living Room Interaction Toy (축구공 지면 정렬 통일) -->
             <div id="toy-ball" class="absolute bottom-10 left-1/3 text-4xl hidden cursor-pointer transition-all duration-300 hover:scale-110">⚽</div>
         </div>
 
-        <!-- ================= [MIDDLE CONTROL] Action Buttons ================= -->
         <div class="relative z-20 px-6 py-2 bg-slate-950 border-t border-slate-900">
-            <!-- Living Room Actions -->
             <div id="actions-living" class="hidden flex justify-around gap-2 py-2">
                 <button onpointerdown="interactFeed()" class="bounce-hover flex-1 flex flex-col items-center bg-orange-50 hover:bg-orange-100 border border-orange-300 p-2.5 rounded-xl">
                     <span class="text-2xl">🍗</span>
@@ -382,14 +360,12 @@
                 </button>
             </div>
 
-            <!-- Bedroom Actions -->
             <div id="actions-bedroom" class="hidden flex justify-center py-2">
                 <button id="btn-sleep" onpointerdown="toggleSleepMode()" class="bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold">
                     <span id="sleep-icon">😴</span> <span id="sleep-text">침대에서 코오 재우기</span>
                 </button>
             </div>
 
-            <!-- Yard Actions -->
             <div id="actions-yard" class="flex justify-center py-2">
                 <div class="text-xs text-slate-400 text-center font-bold py-1.5">
                     🏡 마당은 쉬는 곳이에요. 아래의 🛋️ 거실이나 🛏️ 침실로 이동해서 펫을 돌봐주세요!
@@ -397,8 +373,6 @@
             </div>
         </div>
 
-        <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
-        <!-- iOS 노치 및 사파리 탭바 대응을 위한 가변 패딩(pb-safe) 보완 -->
         <div class="relative z-20 bg-slate-950 pt-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-slate-900 flex justify-between items-center gap-2">
             <div class="flex-1 grid grid-cols-3 gap-1.5">
                 <button id="nav-yard" onpointerdown="switchSpace('yard')" class="relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
@@ -423,59 +397,11 @@
             </button>
         </div>
 
-        <!-- ================= [MINI GAME POPUP] ================= -->
-        <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
-            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center max-h-[90vh] overflow-y-auto">
-
-                <!-- [세부 화면 1: 시작 & 게임 플레이 화면] -->
-                <div id="mini-game-play-view" class="w-full flex flex-col items-center">
-                    <h3 class="text-lg font-game text-pink-400 mb-1">🎈 보글보글 방울 터뜨리기</h3>
-                    <p class="text-xs text-slate-400 text-center mb-3">방울을 터치해서 터뜨리면 아홀로트가 기뻐하고<br><span class="text-green-300 font-bold">놀이 지수</span>와 <span class="text-pink-300 font-bold">경험치</span>가 올라가요!</p>
-
-                    <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
-                        <div>시간제한: <span id="game-timer" class="font-bold text-rose-400">15초</span></div>
-                        <div>터뜨린 개수: <span id="game-score" class="font-bold text-pink-300">0</span></div>
-                    </div>
-
-                    <div id="game-canvas" class="relative w-full h-48 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"></div>
-
-                    <div class="flex gap-2 w-full mt-3 text-xs">
-                        <button id="btn-start" onpointerdown="startBubbleGame()" class="flex-1 bg-pink-500 text-white font-bold py-2 rounded-lg">
-                            게임 시작! 🚀
-                        </button>
-                        <button onpointerdown="closeMiniGame()" class="bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded-lg">
-                            닫기
-                        </button>
-                    </div>
-                </div>
-
-                <!-- [세부 화면 2: 결과 발표 화면 (기본 숨김)] -->
-                <div id="mini-game-result-view" class="w-full flex flex-col items-center hidden py-4">
-                    <span class="text-5xl mb-3">🎉</span>
-                    <h3 class="text-xl font-game text-yellow-400 mb-1">참 잘했어요!</h3>
-                    <p class="text-xs text-slate-300 text-center mb-4">
-                        <!-- 👤 주인 이름 동적 치환 대상 노드 -->
-                        <span id="res-owner" class="text-pink-300 font-bold">주인님</span>이(가) 비눗방울을 무려 <span id="res-score" class="text-pink-400 font-bold text-sm">0</span>개나 터뜨렸어요!
-                    </p>
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-full text-xs text-slate-400 space-y-1 mb-5">
-                        <div class="flex justify-between"><span>💖 획득한 행복 경험치:</span> <span id="res-xp" class="text-pink-300 font-bold">+0</span></div>
-                        <div class="flex justify-between"><span>⚽ 획득한 놀이 게이지:</span> <span id="res-play" class="text-green-300 font-bold">+0%</span></div>
-                    </div>
-                    <button onpointerdown="confirmResult()" class="w-full bg-green-500 text-white font-bold py-2.5 rounded-lg text-sm shadow-md">
-                        우파루파에게 칭찬받기 👍
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ================= ⚙️ [SETTINGS MODAL (보관소 및 커스텀 이름 변경)] ================= -->
         <div id="settings-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
             <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col relative text-slate-200 max-h-[90vh] overflow-y-auto">
                 <button onpointerdown="closeSettings()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-xl">✕</button>
                 <h3 class="text-lg font-game text-pink-400 mb-3 text-center">⚙️ 아홀로트 보관소</h3>
 
-                <!-- 👤 [새로운 기믹] 돌보미 주인 이름 설정창 -->
                 <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
                     <h4 class="text-xs text-pink-300 font-bold mb-1.5">👤 돌보미 이름 변경</h4>
                     <div class="flex gap-1.5">
@@ -486,7 +412,6 @@
                     </div>
                 </div>
 
-                <!-- 클라우드 연동 섹션 -->
                 <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
                     <h4 class="text-xs text-pink-300 font-bold mb-1">☁️ 클라우드 실시간 동기화</h4>
                     <p id="cloud-save-status" class="text-[10px] text-slate-400 mb-2">클라우드 연결 상태 확인 중...</p>
@@ -502,7 +427,6 @@
                     </div>
                 </div>
 
-                <!-- 수동 텍스트 백업 섹션 -->
                 <div class="border border-slate-800 p-3 rounded-xl mb-3 bg-slate-950/50">
                     <h4 class="text-xs text-pink-300 font-bold mb-1.5">💾 수동 비밀번호 백업 및 복구</h4>
                     <div class="flex flex-col gap-2">
@@ -518,7 +442,6 @@
                     </div>
                 </div>
 
-                <!-- PWA 사용자 가이드 -->
                 <div class="border border-slate-800 p-3 rounded-xl mb-4 bg-pink-500/10 border-pink-400/20">
                     <h4 class="text-xs text-pink-300 font-bold mb-1">⭐ 진짜 스마트폰 앱처럼 만들기</h4>
                     <p class="text-[10px] text-slate-300 leading-relaxed">
@@ -533,47 +456,19 @@
             </div>
         </div>
 
-        <!-- -->
-        <!-- ================= ⚠️ [CUSTOM CONFIRM MODAL] ================= -->
-        <div id="confirm-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
-            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center relative text-slate-200 shadow-2xl">
-                <span class="text-4xl mb-3">⚠️</span>
-                <h3 class="text-lg font-bold text-pink-400 mb-2 text-center">정말 새로 시작할까요?</h3>
-                <p class="text-xs text-slate-300 text-center mb-5 leading-relaxed">
-                    새로운 아홀로트를 분양받으면<br>
-                    <span class="text-red-400 font-bold">기존에 열심히 키우던 아홀로트 데이터가 완전히 지워집니다.</span><br>
-                    정말 새로 시작하시겠어요?
-                </p>
-                <div class="flex gap-2 w-full text-xs">
-                    <button onpointerdown="closeConfirmModal(true)" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg bounce-hover">
-                        네, 새로 키울래요!
-                    </button>
-                    <button onpointerdown="closeConfirmModal(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-lg bounce-hover">
-                        아니요, 보존할래요!
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= 🚨 [FLOATING TOAST MESSAGE] ================= -->
         <div id="toast-message" class="absolute top-28 left-1/2 transform -translate-x-1/2 z-50 bg-slate-950/95 text-white border border-pink-400 text-xs py-2.5 px-4 rounded-xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none text-center font-bold tracking-wide min-w-[240px]">
             알림 메시지
         </div>
 
     </div>
 
-    <!-- ==========================================================
-         [JAVASCRIPT SYSTEM CONTROL]
-         ========================================================== -->
     <script type="module">
         // Firebase Core & Auth & Firestore 수입
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // 🚨 호이스팅을 활용한 전역 함수 강제 매핑 🚨
-        // ==========================================
+        // 전역 함수 강제 매핑
         window.switchSpace = switchSpace;
         window.interactFeed = interactFeed;
         window.interactWater = interactWater;
@@ -592,17 +487,19 @@
         window.showFloatingMessage = showFloatingMessage;
         window.toggleFullscreen = toggleFullscreen;
         window.updateOwnerName = updateOwnerName;
-        window.startGameFlow = startGameFlow;         // 타이틀 진입 제어 전역 매핑
-        window.triggerNewGameAlert = triggerNewGameAlert; // 경고 모달 제어 전역 매핑
-        window.closeConfirmModal = closeConfirmModal;     // 경고 모달 분기 제어 전역 매핑
-        window.toggleTitlePreview = toggleTitlePreview;   // 디자이너 미리보기 버튼 전역 바인딩
+
+        // 🪐 타이틀 제어용 신규 매핑 함수들
+        window.actionContinue = actionContinue;
+        window.actionStartNewClick = actionStartNewClick;
+        window.confirmResetExecute = confirmResetExecute;
+        window.closeConfirmModal = closeConfirmModal;
+        window.toggleDesignerPreview = toggleDesignerPreview;
 
         // --- [0] iOS Safari 100vh 탭바 잘림 방지용 동기화 픽셀 엔진 ---
         function resetViewportHeight() {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
-
         window.addEventListener('resize', resetViewportHeight);
         window.addEventListener('orientationchange', resetViewportHeight);
         resetViewportHeight();
@@ -614,7 +511,7 @@
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
             } catch (e) {
-                console.warn("Firebase 환경 정보를 파싱하지 못했습니다.");
+                console.warn("Firebase 파싱 우회");
             }
         }
 
@@ -701,26 +598,12 @@
         let lullabyNoteIndex = 0;
 
         const lullabyMelody = [
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 392.00, d: 1.2 }, // G4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 392.00, d: 1.2 }, // G4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 392.00, d: 0.6 }, // G4
-            { f: 523.25, d: 1.2 }, // C5
-            { f: 493.88, d: 0.6 }, // B4
-            { f: 440.00, d: 0.6 }, // A4
-            { f: 440.00, d: 1.2 }, // A4
-            { f: 392.00, d: 1.8 }, // G4
-
-            { f: 293.66, d: 0.6 }, // D4
-            { f: 349.23, d: 0.6 }, // F4
-            { f: 440.00, d: 1.2 }, // A4
-            { f: 392.00, d: 0.6 }, // G4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 261.63, d: 1.2 }  // C4
+            { f: 329.63, d: 0.6 }, { f: 329.63, d: 0.6 }, { f: 392.00, d: 1.2 },
+            { f: 329.63, d: 0.6 }, { f: 329.63, d: 0.6 }, { f: 392.00, d: 1.2 },
+            { f: 329.63, d: 0.6 }, { f: 392.00, d: 0.6 }, { f: 523.25, d: 1.2 },
+            { f: 493.88, d: 0.6 }, { f: 440.00, d: 0.6 }, { f: 440.00, d: 1.2 }, { f: 392.00, d: 1.8 },
+            { f: 293.66, d: 0.6 }, { f: 349.23, d: 0.6 }, { f: 440.00, d: 1.2 },
+            { f: 392.00, d: 0.6 }, { f: 329.63, d: 0.6 }, { f: 261.63, d: 1.2 }
         ];
 
         function playLullabyStep() {
@@ -728,7 +611,6 @@
                 stopLullaby();
                 return;
             }
-
             const note = lullabyMelody[lullabyNoteIndex];
             playSound(note.f, 'triangle', note.d - 0.05);
             lullabyNoteIndex = (lullabyNoteIndex + 1) % lullabyMelody.length;
@@ -748,48 +630,23 @@
             }
         }
 
-        // --- [4-3] 📱 사파리 주소 바 / 탭 바 원터치 제거 전체화면 엔진 ---
+        // --- [4-3] 전체화면 기능 ---
         function toggleFullscreen() {
             resumeAudioContext();
             const docElem = document.documentElement;
-
             if (document.fullscreenElement || document.webkitFullscreenElement) {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen(); // iOS Safari
-                }
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 showFloatingMessage("📱 일반 화면으로 돌아왔어요.");
-            }
-            else {
-                if (docElem.requestFullscreen) {
-                    docElem.requestFullscreen();
-                } else if (docElem.webkitRequestFullscreen) {
-                    docElem.webkitRequestFullscreen(); // iOS Safari 완벽 강제 침투
-                }
+            } else {
+                if (docElem.requestFullscreen) docElem.requestFullscreen();
+                else if (docElem.webkitRequestFullscreen) docElem.webkitRequestFullscreen();
                 showFloatingMessage("✨ 전체화면 완료! 사파리 탭바가 사라졌어요!");
             }
             setTimeout(resetViewportHeight, 300);
         }
 
-        // --- [5] Floating Toast Message System ---
-        function showFloatingMessage(msg) {
-            const toast = document.getElementById('toast-message');
-            toast.innerText = msg;
-            toast.classList.remove('opacity-0', 'pointer-events-none');
-            toast.classList.add('opacity-100');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100');
-                toast.classList.add('opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-
-        // --- [6] 클라우드 고유 ID 생성기 ---
-        function generatePetId() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-
-        // --- [7] Save & Load System ---
+        // --- [5] Save & Load System ---
         function saveGameData() {
             gameData.lastSaved = Date.now();
             localStorage.setItem('AXOLOTL_MY_TINY_DATA', JSON.stringify(gameData));
@@ -804,7 +661,7 @@
                 document.getElementById('cloud-save-status').innerText = "☁️ 클라우드 실시간 동기화 완료";
                 document.getElementById('cloud-save-status').className = "text-[10px] text-green-400 font-bold mb-2";
             } catch (e) {
-                document.getElementById('cloud-save-status').innerText = "❌ 클라우드 통신 실패 (네트워크 점검)";
+                document.getElementById('cloud-save-status').innerText = "❌ 클라우드 통신 실패";
                 document.getElementById('cloud-save-status').className = "text-[10px] text-red-400 font-bold mb-2";
             }
         }
@@ -817,46 +674,159 @@
                 if (docSnap.exists()) {
                     gameData = docSnap.data();
                     localStorage.setItem('AXOLOTL_MY_TINY_DATA', JSON.stringify(gameData));
+
+                    // 공유 링크 주소 접속자는 번거로운 타이틀 화면을 통과해 로비로 즉시 프리패스 진입
+                    document.getElementById('title-screen').style.display = 'none';
                     updateCanvasUI();
-                    showFloatingMessage("☁️ 아홀로트를 클라우드에서 성공적으로 데려왔어요!");
+                    showFloatingMessage("☁️ 클라우드에서 아홀로트를 안전하게 데려왔어요!");
                 } else {
-                    showFloatingMessage("😢 해당 번호의 아홀로트를 클라우드에서 찾지 못했어요.");
-                    loadLocalOrNewPet();
+                    showFloatingMessage("😢 해당 번호의 아홀로트를 찾지 못했습니다.");
+                    setupTitleScreenFlow();
                 }
             } catch (e) {
-                showFloatingMessage("❌ 불러오기 중 오류 발생 (네트워크 점검)");
-                loadLocalOrNewPet();
+                setupTitleScreenFlow();
             }
+        }
+
+        // ==========================================================
+        // 🪐 [NEW] 타이틀 세션 라우팅 조건 연출 모듈 (핵심 기믹)
+        // 로컬 데이터를 분석하여 신규 / 기존 복귀 화면을 동적으로 드로잉합니다.
+        // ==========================================================
+        function setupTitleScreenFlow() {
+            const localData = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
+            const btnContinue = document.getElementById('btn-continue');
+            const btnStartNew = document.getElementById('btn-start-new');
+            const historySummary = document.getElementById('history-summary-text');
+            const subText = document.getElementById('title-sub-text');
+
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    // 1. 세이브 기록이 존재하는 유저 (복귀 모드 레이아웃 컴팩트 수축)
+                    gameData = parsed;
+
+                    btnContinue.classList.remove('hidden'); // 이어하기 활성화
+                    btnStartNew.innerText = "처음부터 새로 시작하기 🥚";
+                    btnStartNew.className = "w-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-400 font-bold py-2 rounded-xl text-xs transition-all bounce-hover"; // 서브 버튼으로 축소
+
+                    const stageName = GROWTH_STAGES[parsed.level]?.name || "아기 아홀로트 👶";
+                    historySummary.innerText = `마지막 기록: ${stageName} (Lv.${parsed.level})`;
+                    subText.innerText = `돌아오신 것을 환영합니다, ${parsed.ownerName || '주인님'}!`;
+
+                    document.getElementById('owner-name-input').value = gameData.ownerName;
+                    return;
+                } catch (e) { }
+            }
+
+            // 2. 기록이 전무한 최초 진입 상태 (신규 유저 전용 분양 버튼 9:16 단독 노출)
+            btnContinue.classList.add('hidden'); // 이어하기 소멸
+            btnStartNew.innerText = "새로운 아홀로트 분양받기 🐣";
+            btnStartNew.className = "w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-pink-500/20 text-base bounce-hover tracking-wide"; // 메인 강조 서양 유지
+            historySummary.innerText = "";
+            subText.innerText = "나만의 소중한 찰흙 토이 펫을 보살펴주세요";
+        }
+
+        // 타이틀 제어 액션 1: 이어하기 실행
+        function actionContinue() {
+            playSound(400, 'sine', 0.1);
+            playSound(600, 'sine', 0.1, 0.05);
+            playSound(800, 'sine', 0.15, 0.1);
+
+            // 타이틀 씬 차단 후 로비 전면 등판
+            document.getElementById('title-screen').style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                document.getElementById('title-screen').style.display = 'none';
+            }, 500);
+
+            loadLocalOrNewPet();
+        }
+
+        // 타이틀 제어 액션 2: 신규 시작 터치 (복귀 유저에겐 오클릭 경고 팝업 작동)
+        function actionStartNewClick() {
+            const localData = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
+            if (localData) {
+                // 기존 데이터 보호를 위한 커스텀 경고창 등판
+                document.getElementById('confirm-modal').classList.remove('hidden');
+                document.getElementById('confirm-modal').style.display = 'flex';
+                playSound(250, 'sawtooth', 0.2);
+            } else {
+                // 진짜 신규 유저는 경고 없이 프리패스 분양 씬 돌입
+                executeFreshStart();
+            }
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').style.display = 'none';
+            playSound(300, 'sine', 0.1);
+        }
+
+        // 커스텀 경고창에서 새로 시작 최종 확정 시 구동
+        function confirmResetExecute() {
+            closeConfirmModal();
+            executeFreshStart();
+        }
+
+        function executeFreshStart() {
+            localStorage.removeItem('AXOLOTL_MY_TINY_DATA'); // 로컬 파괴
+
+            // 데이터 완전 초기화 초기 매핑
+            gameData = {
+                petId: generatePetId(),
+                ownerName: "주인님",
+                level: 1, exp: 0, maxExp: 100,
+                stats: { hunger: 100, thirst: 100, energy: 100, affection: 100 },
+                currentSpace: 'yard', isSleeping: false, lastSaved: Date.now()
+            };
+
+            saveGameData();
+
+            playSound(523, 'sine', 0.08);
+            playSound(659, 'sine', 0.08, 0.06);
+            playSound(784, 'sine', 0.08, 0.12);
+            playSound(1046, 'sine', 0.2, 0.18);
+
+            document.getElementById('title-screen').style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                document.getElementById('title-screen').style.display = 'none';
+            }, 500);
+
+            loadLocalOrNewPet();
+            showFloatingMessage("🐣 말랑말랑 아기 우파루파가 마당에 새로 왔어요!");
+        }
+
+        // 🧪 디자이너용 실시간 레이아웃 피드백 테스터 함수 (세이브 무해 검증용)
+        let previewToggleFlag = false;
+        function toggleDesignerPreview(event) {
+            event.stopPropagation();
+            previewToggleFlag = !previewToggleFlag;
+
+            const btnContinue = document.getElementById('btn-continue');
+            const btnStartNew = document.getElementById('btn-start-new');
+            const historySummary = document.getElementById('history-summary-text');
+            const subText = document.getElementById('title-sub-text');
+
+            if (previewToggleFlag) {
+                // 임시 강제 신규 단독 UI 레이아웃 노출 테스트
+                btnContinue.classList.add('hidden');
+                btnStartNew.innerText = "새로운 아홀로트 분양받기 🐣";
+                btnStartNew.className = "w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-pink-500/20 text-base bounce-hover tracking-wide";
+                historySummary.innerText = "🧪 [디자이너 미리보기 모드: 신규 가입자 화면]";
+                subText.innerText = "나만의 소중한 찰흙 토이 펫을 보살펴주세요";
+            } else {
+                // 원래 상태로 즉시 복구 복원
+                setupTitleScreenFlow();
+            }
+            playSound(440, 'triangle', 0.05);
         }
 
         function loadLocalOrNewPet() {
             const saved = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
             if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    const offlineSecs = Math.floor((Date.now() - parsed.lastSaved) / 1000);
-                    const decay = Math.min(50, Math.floor(offlineSecs / 40));
-
-                    if (parsed.isSleeping) {
-                        parsed.stats.energy = Math.min(100, parsed.stats.energy + Math.floor(offlineSecs / 12));
-                        parsed.stats.hunger = Math.max(10, parsed.stats.hunger - decay);
-                        parsed.stats.thirst = Math.max(10, parsed.stats.thirst - decay);
-                    } else {
-                        parsed.stats.hunger = Math.max(10, parsed.stats.hunger - decay);
-                        parsed.stats.thirst = Math.max(10, parsed.stats.thirst - decay);
-                        parsed.stats.energy = Math.max(10, parsed.stats.energy - Math.floor(decay / 1.5));
-                        parsed.stats.affection = Math.max(10, parsed.stats.affection - decay);
-                    }
-                    gameData = parsed;
-                } catch (e) { }
+                try { gameData = JSON.parse(saved); } catch (e) { }
             }
-
-            if (!gameData.petId) {
-                gameData.petId = generatePetId();
-            }
-            if (!gameData.ownerName) {
-                gameData.ownerName = "주인님";
-            }
+            if (!gameData.petId) gameData.petId = generatePetId();
+            if (!gameData.ownerName) gameData.ownerName = "주인님";
 
             document.getElementById('pet-id-display').innerText = gameData.petId;
             document.getElementById('owner-name-input').value = gameData.ownerName;
@@ -867,149 +837,31 @@
             updateCanvasUI();
         }
 
-        //        // ==========================================
-        // 💾 [신규 기능] 타이틀 화면 구성 및 데이터 유무 추적기
-        // ==========================================
-        let titleScreenPreviewOverride = null; // 디자이너 화면 강제 토글 상태 인자 추가 ('new' or 'returning' or null)
-
-        function setupTitleScreen() {
-            const actualHasSave = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
-            let hasSave = actualHasSave;
-
-            // 디자이너 강제 보기 토글 상태에 따른 분기 오버라이드
-            if (titleScreenPreviewOverride === 'new') {
-                hasSave = null;
-            } else if (titleScreenPreviewOverride === 'returning') {
-                hasSave = "dummy-save-data";
-            }
-
-            const btnCont = document.getElementById('btn-continue');
-            const btnNew = document.getElementById('btn-newgame');
-            const statusTxt = document.getElementById('title-status-text');
-
-            if (hasSave) {
-                // 오버라이드 상태인데 실제 세이브가 없다면 기본 레벨 1로 표기
-                let mockLevel = 1;
-                try {
-                    if (actualHasSave) {
-                        const parsed = JSON.parse(actualHasSave);
-                        mockLevel = parsed.level;
-                    }
-                } catch (e) {
-                    mockLevel = 1;
-                }
-
-                btnCont.classList.remove('hidden');
-                // 이어하기가 활성화될 경우 새 게임 버튼은 하위 계층 스타일로 축소 변형
-                btnNew.className = "w-full bounce-hover bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 text-slate-400 font-bold py-2.5 px-6 rounded-2xl text-xs";
-                btnNew.innerText = "🥚 처음부터 새로 시작하기";
-
-                const stageName = GROWTH_STAGES[mockLevel]?.name || "아기 아홀로트";
-                statusTxt.innerText = `마지막 기록: ${stageName} (Lv.${mockLevel})`;
-            } else {
-                btnCont.classList.add('hidden');
-                btnNew.className = "w-full bounce-hover bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg border-2 border-pink-300 text-sm";
-                btnNew.innerText = "🐣 새로운 아홀로트 분양받기";
-                statusTxt.innerText = "처음 방문하셨군요! 환영해요 🌸";
-            }
-        }
-
-        function toggleTitlePreview() {
-            resumeAudioContext();
-            const actualHasSave = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
-            const toggleBtn = document.getElementById('btn-dev-toggle');
-
-            // 로컬스토리지 보존형 모달 전환 트리거 구동
-            if (titleScreenPreviewOverride === null) {
-                if (actualHasSave) {
-                    titleScreenPreviewOverride = 'new';
-                    toggleBtn.innerText = "🧪 기존 화면 미리보기";
-                    showFloatingMessage("🧪 신규 유저 진입 화면으로 전환되었습니다. (저장된 펫은 안전해요!)");
-                } else {
-                    titleScreenPreviewOverride = 'returning';
-                    toggleBtn.innerText = "🧪 실제 저장대로 보기";
-                    showFloatingMessage("🧪 복귀 유저 진입 화면으로 전환되었습니다. (더미 데이터 적용)");
-                }
-            } else if (titleScreenPreviewOverride === 'new') {
-                titleScreenPreviewOverride = 'returning';
-                toggleBtn.innerText = "🧪 실제 저장대로 보기";
-                showFloatingMessage("🧪 복귀 유저 진입 화면으로 전환되었습니다. (더미 데이터 적용)");
-            } else {
-                titleScreenPreviewOverride = null;
-                toggleBtn.innerText = actualHasSave ? "🧪 신규 화면 미리보기" : "🧪 기존 화면 미리보기";
-                showFloatingMessage("🧪 원래 사용자의 실제 데이터 상태 화면으로 안전하게 돌아왔습니다.");
-            }
-            setupTitleScreen();
-        }
-
-        // 타이틀에서 시작 흐름 제어 스크립트
-        function startGameFlow(isContinue) {
-            resumeAudioContext();
-            playSound(440, 'triangle', 0.1);
-            playSound(554, 'triangle', 0.1, 0.08);
-            playSound(659, 'triangle', 0.2, 0.16);
-
-            if (isContinue) {
-                // 기존 데이터 유지 로딩
-                loadLocalOrNewPet();
-                showFloatingMessage("💾 저장된 모험 기록을 불러왔습니다!");
-            } else {
-                // 데이터 초기화 및 생명체 리스폰
-                localStorage.removeItem('AXOLOTL_MY_TINY_DATA');
-                gameData = {
-                    petId: generatePetId(),
-                    ownerName: "주인님",
-                    level: 1,
-                    exp: 0,
-                    maxExp: 100,
-                    stats: { hunger: 80, thirst: 70, energy: 90, affection: 50 },
-                    currentSpace: 'yard',
-                    isSleeping: false,
-                    lastSaved: Date.now()
-                };
-                saveGameData();
-                updateCanvasUI();
-                showFloatingMessage("🐣 새로운 아기 아홀로트가 탄생했습니다!");
-            }
-
-            // 부드러운 페이드아웃 효과를 동반한 시작화면 제거
-            const screen = document.getElementById('title-screen');
-            screen.style.opacity = '0';
-            screen.style.pointerEvents = 'none';
-            setTimeout(() => {
-                screen.classList.add('hidden');
-            }, 500);
-
-            // 로비 진입 지점 이동
-            switchSpace(gameData.currentSpace || 'yard');
-        }
-
-        // 경고 확인창 모달 구동
-        function triggerNewGameAlert() {
-            resumeAudioContext();
-            // 어제 올린 세이브 내역이 있다면 경고 모달 열기
-            if (localStorage.getItem('AXOLOTL_MY_TINY_DATA')) {
-                playSound(250, 'sawtooth', 0.2);
-                document.getElementById('confirm-modal').classList.remove('hidden');
-            } else {
-                // 첫판이라면 가드 없이 즉시 새 게임 진입
-                startGameFlow(false);
-            }
-        }
-
-        function closeConfirmModal(shouldReset) {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            if (shouldReset) {
-                startGameFlow(false);
-            }
-        }
-
         // --- [8] UI Sync Engine ---
-        function updateCanvasUI_Legacy() {
-            // 주석 레거시 백업 공간
+        function updateCanvasUI() {
+            const percent = Math.min(100, (gameData.exp / gameData.maxExp) * 100);
+            document.getElementById('exp-bar').style.width = `${percent}%`;
+
+            document.getElementById('stat-hunger').style.width = `${gameData.stats.hunger}%`;
+            document.getElementById('stat-thirst').style.width = `${gameData.stats.thirst}%`;
+            document.getElementById('stat-energy').style.width = `${gameData.stats.energy}%`;
+            document.getElementById('stat-affection').style.width = `${gameData.stats.affection}%`;
+
+            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
+            document.getElementById('pet-stage').innerText = `${stage.name} (Lv.${gameData.level})`;
+            document.getElementById('happy-multiplier').innerText = `x${stage.multiplier.toFixed(1)}`;
+
+            const avatar = document.getElementById('axolotl-avatar');
+            const fallback = document.getElementById('emoji-fallback');
+            avatar.style.transform = `scale(${stage.scale})`;
+            fallback.style.transform = `scale(${stage.scale})`;
+            document.getElementById('character-shadow').style.transform = `scale(${stage.scale})`;
+
+            syncFacialExpression();
+            updateNotificationBadges();
         }
 
-        // --- [9] Smart Expression & Location Hint Resolver (주인 이름 연동) ---
+        // --- [9] Smart Expression & Location Hint Resolver ---
         function syncFacialExpression() {
             const avatar = document.getElementById('axolotl-avatar');
             const fallback = document.getElementById('emoji-fallback');
@@ -1025,7 +877,6 @@
             else if (s.hunger < 35 || s.thirst < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-angry.png";
                 fallback.innerText = "😡";
-
                 if (gameData.currentSpace !== 'living') {
                     bubble.innerText = "우웅.. 배고프고 목말라요! 🛋️ 거실로 이동해주세요!";
                 } else {
@@ -1035,7 +886,6 @@
             else if (s.energy < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-sleepy.png";
                 fallback.innerText = "🥱";
-
                 if (gameData.currentSpace !== 'bedroom') {
                     bubble.innerText = "너무 졸려요... 🛏️ 침실로 데려가주세요!";
                 } else {
@@ -1045,7 +895,6 @@
             else if (s.affection < 35) {
                 if (!isImageBroken) avatar.src = "images/axolotl-sad.png";
                 fallback.innerText = "🥺";
-
                 if (gameData.currentSpace !== 'living') {
                     bubble.innerText = "심심해요.. 🛋️ 거실로 가서 신나게 놀아요!";
                 } else {
@@ -1074,7 +923,7 @@
             if (s.energy < 35 && gameData.currentSpace !== 'bedroom') {
                 badgeBedroom.classList.remove('hidden');
             } else {
-                badgeBedroom.classList.add('hidden');
+                badgeBedroom.mathbf.add('hidden');
             }
         }
 
@@ -1087,7 +936,6 @@
             spaces.forEach(key => {
                 document.getElementById(`space-${key}`).classList.add('hidden');
                 document.getElementById(`actions-${key}`).classList.add('hidden');
-
                 const nav = document.getElementById(`nav-${key}`);
                 nav.className = "bounce-hover py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-bold text-xs";
             });
@@ -1105,78 +953,20 @@
             playSound(350, 'triangle', 0.1);
             playSound(450, 'triangle', 0.1, 0.05);
 
-            if (spaceName === 'bedroom' && gameData.isSleeping) {
-                startLullaby();
-            } else {
-                stopLullaby();
-            }
+            if (spaceName === 'bedroom' && gameData.isSleeping) startLullaby();
+            else stopLullaby();
 
             updateCanvasUI();
             saveGameData();
         }
 
-        // --- [12] Core Interaction Loops ---
-        const charTarget = document.getElementById('character-target');
-        charTarget.addEventListener('pointerdown', (e) => {
-            resumeAudioContext();
-            if (gameData.isSleeping) return;
-
-            const targetElement = isImageBroken ? document.getElementById('emoji-fallback') : document.getElementById('axolotl-avatar');
-            targetElement.classList.remove('axolotl-idle');
-            targetElement.classList.add('axolotl-jump');
-            setTimeout(() => {
-                targetElement.classList.remove('axolotl-jump');
-                targetElement.classList.add('axolotl-idle');
-            }, 500);
-
-            const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
-            addHappinessPoints(Math.floor(8 * stage.multiplier), e.clientX, e.clientY, 'touch');
-
-            playSound(550, 'sine', 0.1);
-            playSound(680, 'sine', 0.1, 0.04);
-        });
-
-        function addHappinessPoints(amount, clickX = null, clickY = null, type = 'touch') {
-            gameData.exp += amount;
-
-            const spawnX = clickX || window.innerWidth / 2;
-            const spawnY = clickY || window.innerHeight / 2 - 40;
-
-            const particleCount = Math.floor(Math.random() * 2) + 1;
-            for (let i = 0; i < particleCount; i++) {
-                spawnHeartParticle(spawnX, spawnY, type);
-            }
-
-            if (gameData.exp >= gameData.maxExp && gameData.level < 3) {
-                gameData.level++;
-                gameData.exp = 0;
-                gameData.maxExp = GROWTH_STAGES[gameData.level].threshold;
-
-                playSound(440, 'triangle', 0.12);
-                playSound(554, 'triangle', 0.12, 0.08);
-                playSound(659, 'triangle', 0.12, 0.16);
-                playSound(880, 'triangle', 0.25, 0.24);
-
-                showFloatingMessage(`🎉 축하합니다! ${GROWTH_STAGES[gameData.level].name}(으)로 성장했습니다!`);
-            }
-            updateCanvasUI();
-            saveGameData();
-        }
-
-        // ==========================================
-        // 🚀 하트 풍선 탄성 팝 파티클 엔진 🚀
-        // ==========================================
+        // --- [12] 파티클 분사 루프 ---
         function spawnHeartParticle(x, y, type = 'touch') {
             const container = document.body;
-
             let emojis = ['🌸', '💕'];
-            if (type === 'feed') {
-                emojis = ['❤️', '💖', '💕', '💝'];
-            } else if (type === 'water') {
-                emojis = ['✨', '🌟', '😊', '🙂'];
-            } else if (type === 'play') {
-                emojis = ['🎈', '🫧'];
-            }
+            if (type === 'feed') emojis = ['❤️', '💖', '💕', '💝'];
+            else if (type === 'water') emojis = ['✨', '🌟', '😊', '🙂'];
+            else if (type === 'play') emojis = ['🎈', '🫧'];
 
             const p = document.createElement('div');
             p.className = 'cozy-particle text-3xl z-50';
@@ -1184,10 +974,8 @@
 
             const driftX1 = (Math.random() * 30 - 15) + 'px';
             const driftY1 = -(Math.random() * 30 + 15) + 'px';
-
             const driftX2 = (Math.random() * 60 - 30) + 'px';
             const driftY2 = -(Math.random() * 50 + 60) + 'px';
-
             const driftX3 = (Math.random() * 100 - 50) + 'px';
             const driftY3 = -(Math.random() * 100 + 150) + 'px';
 
@@ -1212,9 +1000,7 @@
             setTimeout(() => p.remove(), 1600);
         }
 
-        // Actions
         function interactFeed() {
-            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.hunger >= 100) return;
             gameData.stats.hunger = Math.min(100, gameData.stats.hunger + 25);
             addHappinessPoints(4, null, null, 'feed');
@@ -1223,7 +1009,6 @@
         }
 
         function interactWater() {
-            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.thirst >= 100) return;
             gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 25);
             addHappinessPoints(4, null, null, 'water');
@@ -1231,292 +1016,83 @@
             playSound(900, 'sine', 0.05, 0.05);
         }
 
-        // 공놀이 상호작용
         function interactBall() {
-            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.affection >= 100) return;
             gameData.stats.affection = Math.min(100, gameData.stats.affection + 30);
-
             const ball = document.getElementById('toy-ball');
             ball.style.transform = `translateY(-100px) rotate(180deg)`;
             setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
-
             addHappinessPoints(6, null, null, 'play');
             playSound(250, 'sawtooth', 0.08);
             playSound(400, 'sawtooth', 0.08, 0.06);
         }
 
-        // 침실 잠자기 연출 조율 모듈
         function toggleSleepMode() {
-            resumeAudioContext();
             gameData.isSleeping = !gameData.isSleeping;
             const btn = document.getElementById('btn-sleep');
             const txt = document.getElementById('sleep-text');
             const icon = document.getElementById('sleep-icon');
-
             const avatar = document.getElementById('axolotl-avatar');
             const fallback = document.getElementById('emoji-fallback');
             const lampGlow = document.getElementById('bedroom-lamp-glow');
 
             if (gameData.isSleeping) {
-                txt.innerText = "아침이야! 깨우기";
-                icon.innerText = "☀️";
+                txt.innerText = "아침이야! 깨우기"; icon.innerText = "☀️";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-3 rounded-xl text-xs font-bold";
-
                 if (lampGlow) lampGlow.classList.add('lamp-active');
                 if (avatar) avatar.classList.add('sleep-glow');
                 if (fallback) fallback.classList.add('sleep-glow');
-
                 startLullaby();
             } else {
-                txt.innerText = "침실에서 코오 재우기";
-                icon.innerText = "😴";
+                txt.innerText = "침실에서 코오 재우기"; icon.innerText = "😴";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold";
-
                 if (lampGlow) lampGlow.classList.remove('lamp-active');
                 if (avatar) avatar.classList.remove('sleep-glow');
                 if (fallback) fallback.classList.remove('sleep-glow');
-
                 stopLullaby();
             }
             updateCanvasUI();
             saveGameData();
         }
 
-        // --- [13] Real-time Decay Loop ---
-        setInterval(() => {
-            if (gameData.isSleeping) {
-                gameData.stats.energy = Math.min(100, gameData.stats.energy + 3);
-                gameData.stats.hunger = Math.max(0, gameData.stats.hunger - 1);
-                gameData.stats.thirst = Math.max(0, gameData.stats.thirst - 1);
-            } else {
-                gameData.stats.hunger = Math.max(0, gameData.stats.hunger - 2);
-                gameData.stats.thirst = Math.max(0, gameData.stats.thirst - 2);
-                gameData.stats.energy = Math.max(0, gameData.stats.energy - 1.5);
-                gameData.stats.affection = Math.max(0, gameData.stats.affection - 2.5);
-            }
-            updateCanvasUI();
-            saveGameData();
-        }, 4000);
-
-        // --- [14] Bubble Pop Mini Game Engine ---
-        let gameInterval, gameTimer, gameScore, isRunning = false;
-
-        function openMiniGame() {
-            resumeAudioContext();
-            document.getElementById('mini-game-play-view').classList.remove('hidden');
-            document.getElementById('mini-game-result-view').classList.add('hidden');
-            document.getElementById('game-modal').style.display = 'flex';
-        }
-
-        function closeMiniGame() {
-            document.getElementById('game-modal').style.display = 'none';
-            stopGameLoop();
-        }
-
-        function startBubbleGame() {
-            if (isRunning) return;
-            isRunning = true; gameScore = 0; gameTimer = 15;
-            document.getElementById('game-score').innerText = gameScore;
-            document.getElementById('game-timer').innerText = `${gameTimer}초`;
-            document.getElementById('btn-start').disabled = true;
-
-            const cv = document.getElementById('game-canvas');
-            cv.innerHTML = '';
-
-            gameInterval = setInterval(() => {
-                const b = document.createElement('div');
-                const size = Math.floor(Math.random() * 15) + 25;
-                b.className = "absolute rounded-full bg-pink-400/30 border border-pink-200 cursor-pointer transition-all";
-                b.style.width = `${size}px`; b.style.height = `${size}px`;
-                b.style.left = `${Math.floor(Math.random() * (cv.clientWidth - size))}px`;
-                b.style.top = `${Math.floor(Math.random() * (cv.clientHeight - size))}px`;
-
-                b.addEventListener('pointerdown', (e) => {
-                    e.stopPropagation(); b.remove(); gameScore++;
-                    document.getElementById('game-score').innerText = gameScore;
-                    playSound(600 + (gameScore * 20), 'sine', 0.04);
-                });
-                cv.appendChild(b);
-                setTimeout(() => b.remove(), 2500);
-            }, 500);
-
-            const clock = setInterval(() => {
-                gameTimer--;
-                document.getElementById('game-timer').innerText = `${gameTimer}초`;
-                if (gameTimer <= 0) { clearInterval(clock); finishMiniGame(); }
-            }, 1000);
-        }
-
-        function stopGameLoop() {
-            clearInterval(gameInterval); isRunning = false;
-            document.getElementById('btn-start').disabled = false;
-        }
-
-        let pendingExpReward = 0;
-        let pendingPlayReward = 0;
-
-        function finishMiniGame() {
-            stopGameLoop();
-            const multi = GROWTH_STAGES[gameData.level].multiplier;
-            pendingExpReward = Math.floor(gameScore * 6 * multi);
-            pendingPlayReward = Math.min(100, gameData.stats.affection + (gameScore * 3)) - gameData.stats.affection;
-
-            gameData.stats.affection = Math.min(100, gameData.stats.affection + (gameScore * 3));
-
-            playSound(440, 'triangle', 0.1);
-            playSound(554, 'triangle', 0.1, 0.08);
-            playSound(659, 'triangle', 0.2, 0.16);
-
-            document.getElementById('mini-game-play-view').classList.add('hidden');
-            document.getElementById('mini-game-result-view').classList.remove('hidden');
-
-            document.getElementById('res-owner').innerText = gameData.ownerName; // 주인 이름 갱신
-            document.getElementById('res-score').innerText = gameScore;
-            document.getElementById('res-xp').innerText = `+${pendingExpReward}`;
-            document.getElementById('res-play').innerText = `+${Math.floor(pendingPlayReward)}%`;
-        }
-
-        //        function confirmResult() {
-        addHappinessPoints(pendingExpReward);
-        closeMiniGame();
-            }
-
-        // --- [15] ⚙️ Settings Modal & Data Operations ---
-        function openSettings() {
-            resumeAudioContext();
-            document.getElementById('pet-id-display').innerText = gameData.petId || '------';
-            document.getElementById('owner-name-input').value = gameData.ownerName || '주인님';
-            document.getElementById('settings-modal').style.display = 'flex';
-        }
-
-        function closeSettings() {
-            document.getElementById('settings-modal').style.display = 'none';
-        }
-
         function updateOwnerName() {
             const newName = document.getElementById('owner-name-input').value.trim();
-            if (!newName) {
-                showFloatingMessage("✍️ 이름을 적어주세요!");
-                return;
-            }
+            if (!newName) return;
             gameData.ownerName = newName;
             saveGameData();
             updateCanvasUI();
-            showFloatingMessage(`👤 돌보미 이름이 '${newName}'(으)로 멋지게 변경되었습니다!`);
+            showFloatingMessage(`👤 돌보미 이름이 '${newName}'(으)로 변경되었습니다!`);
         }
 
-        function executeCopy(text) {
-            const input = document.createElement("input");
-            input.value = text;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand("copy");
-            document.body.removeChild(input);
-        }
-
-        function copyBackupCode() {
-            try {
-                const jsonStr = JSON.stringify(gameData);
-                const b64Code = btoa(encodeURIComponent(jsonStr));
-                executeCopy(b64Code);
-                showFloatingMessage("📋 백업 비밀번호가 복사되었습니다! 소중히 보관해 주세요.");
-            } catch (e) {
-                showFloatingMessage("❌ 복사 실패 (데이터 오류)");
-            }
-        }
-
-        function importBackupCode() {
-            const inputVal = document.getElementById('backup-code-input').value.trim();
-            if (!inputVal) {
-                showFloatingMessage("✍️ 비밀번호 코드를 먼저 입력해 주세요!");
-                return;
-            }
-            try {
-                const decodedJson = decodeURIComponent(atob(inputVal));
-                const parsedData = JSON.parse(decodedJson);
-
-                if (parsedData && parsedData.stats && parsedData.level) {
-                    gameData = parsedData;
-                    if (!gameData.petId) {
-                        gameData.petId = generatePetId();
-                    }
-                    if (!gameData.ownerName) {
-                        gameData.ownerName = "주인님";
-                    }
-                    saveGameData();
-                    updateCanvasUI();
-                    showFloatingMessage(`🎉 성공적으로 ${gameData.ownerName}님의 우파루파를 복구했습니다!`);
-                    document.getElementById('backup-code-input').value = "";
-                    closeSettings();
-                } else {
-                    showFloatingMessage("❌ 올바른 백업 비밀번호 양식이 아닙니다.");
-                }
-            } catch (e) {
-                showFloatingMessage("❌ 복구 실패 (코드 오류 또는 만료)");
-            }
-        }
-
-        function copyShareLink() {
-            if (!gameData.petId) {
-                showFloatingMessage("⏳ 아직 펫 번호가 발행되지 않았습니다.");
-                return;
-            }
-            const shareUrl = window.location.origin + window.location.pathname + "?petId=" + gameData.petId;
-            executeCopy(shareUrl);
-            showFloatingMessage("🔗 공유 주소가 복사되었습니다! 다른 폰 주소창에 넣어보세요!");
-        }
-
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-
-        // --- [16] 무중단 초기 구동 및 마찰 없는 바인딩 연계 ---
         window.onload = async function () {
             document.body.addEventListener('pointerdown', resumeAudioContext, { once: true });
 
             if (isFirebaseActive && auth) {
-                try {
-                    await initAuth();
-                } catch (e) {
-                    console.warn("Firebase 로그인 중 내부 에러를 우회합니다.", e);
-                }
-
+                try { await initAuth(); } catch (e) { }
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         const urlParams = new URLSearchParams(window.location.search);
                         const urlPetId = urlParams.get('petId');
-
-                        if (urlPetId) {
-                            // 🔗 다른 사람의 공유 링크로 진입했을 때는 타이틀을 스킵하고 즉시 실행
-                            await loadPetFromCloud(urlPetId);
-                            const screen = document.getElementById('title-screen');
-                            if (screen) screen.classList.add('hidden');
-                            switchSpace(gameData.currentSpace || 'yard');
-                        } else {
-                            // 일반 진입 시 타이틀 활성화 및 로컬 검사 수행
+                        if (urlPetId) await loadPetFromCloud(urlPetId);
+                        else {
                             loadLocalOrNewPet();
-                            setupTitleScreen();
+                            setupTitleScreenFlow(); // 인증 후 타이틀 연출 가동
                         }
                     } else {
                         loadLocalOrNewPet();
-                        setupTitleScreen();
+                        setupTitleScreenFlow();
                     }
                 });
             } else {
                 loadLocalOrNewPet();
-                setupTitleScreen();
+                setupTitleScreenFlow(); // 로컬 모드 즉시 타이틀 가동
                 const statusLabel = document.getElementById('cloud-save-status');
                 if (statusLabel) {
                     statusLabel.innerText = "📴 로컬 단독 보관 모드로 작동 중";
                     statusLabel.className = "text-[10px] text-amber-400 font-bold mb-2";
                 }
             }
-
+            switchSpace('yard');
             resetViewportHeight();
         }
     </script>
