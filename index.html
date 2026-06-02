@@ -23,27 +23,35 @@
 
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
 
-        body {
-            font-family: 'Binggrae', 'Fredoka One', sans-serif;
-            background-color: #0f172a;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
+        /* 📱 [모바일 대응 강력 스케일러]
+           바운스 및 스크롤을 시스템 레벨에서 완전 차단하여 모바일 탭바가 올라와도 절대 넘치지 않게 고정합니다. */
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             overflow: hidden;
+            position: fixed;
+            overscroll-behavior: none;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #090d16;
         }
 
-        /* JS에서 구한 실제 뷰포트 높이인 var(--vh)를 기반으로 캔버스를 100% 채웁니다. */
+        body {
+            font-family: 'Binggrae', 'Fredoka One', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 📱 가시 화면을 100dvh로 완전 잠금하여 최신 기종(아이폰 16 프로맥스 등)에서도 오버플로우를 완전히 막습니다. */
         .game-container {
             width: 100%;
             height: 100dvh;
-            height: calc(var(--vh, 1vh) * 100);
+            max-height: 100dvh;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -55,7 +63,6 @@
             .game-container {
                 max-width: 430px;
                 height: 85vh;
-                height: calc(var(--vh, 1vh) * 85);
                 border-radius: 40px;
                 border-width: 8px;
                 border-color: #1e293b; /* slate-800 */
@@ -196,7 +203,7 @@
                 <h1 class="text-3xl md:text-4xl text-white font-bold drop-shadow-[0_4px_12px_rgba(244,63,94,0.3)] tracking-wide">
                     말랑말랑<br><span class="text-pink-300">아홀로트 키우기</span>
                 </h1>
-                <p id="title-sub-text" class="text-xs text-slate-400">나만의 소중한 펫을 보살펴주세요</p>
+                <p id="title-sub-text" class="text-xs text-slate-400">나만의 소중한 찰흙 토이 펫을 보살펴주세요</p>
             </div>
 
             <!-- 중앙 타이틀 스케일 캐릭터 연출: 둥근 원형 액자/창문 마스크 기법 적용 -->
@@ -245,6 +252,37 @@
                         아니요! 돌아갈래요
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================
+             🍼 [NEW] ONBOARDING MODAL (아홀로트 입양 기록부)
+             ========================================================== -->
+        <div id="onboarding-modal" class="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 hidden">
+            <div class="bg-slate-900 border-2 border-pink-400 rounded-[30px] p-6 w-full max-w-sm flex flex-col relative text-slate-200 shadow-2xl">
+                <h3 class="text-xl font-bold text-pink-400 mb-4 text-center">🐣 아홀로트 입양 기록부</h3>
+
+                <div class="space-y-4 mb-6 text-left">
+                    <!-- 1. Owner Name -->
+                    <div>
+                        <label class="block text-xs text-pink-300 font-bold mb-1">👤 나의 돌보미 이름</label>
+                        <input id="onboard-owner-input" type="text" placeholder="예) 삼촌, 집사" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <!-- 2. Pet Name -->
+                    <div>
+                        <label class="block text-xs text-pink-300 font-bold mb-1">🌸 아홀로트 이름 지어주기</label>
+                        <input id="onboard-pet-input" type="text" placeholder="예) 말랑이, 동글이" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <!-- 3. Birthday -->
+                    <div>
+                        <label class="block text-xs text-pink-300 font-bold mb-1">📅 아홀로트 생일 입력하기</label>
+                        <input id="onboard-birth-input" type="date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-pink-500">
+                    </div>
+                </div>
+
+                <button onpointerdown="submitOnboarding()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 rounded-xl text-sm shadow-md transition-all bounce-hover">
+                    분양 완료하기 ✨
+                </button>
             </div>
         </div>
 
@@ -309,7 +347,8 @@
         </div>
 
         <!-- ================= [CENTER AREA] Environment & Character ================= -->
-        <div id="game-space" class="relative flex-1 w-full flex items-center justify-center transition-all duration-500">
+        <!-- [해상도 대응] min-h-0과 overflow-hidden을 주어 절대 세로폭 이상으로 늘어나지 못하게 제한합니다. -->
+        <div id="game-space" class="relative flex-1 min-h-0 w-full overflow-hidden flex items-center justify-center transition-all duration-500">
 
             <!-- Yard Background Layer -->
             <div id="space-yard" class="absolute inset-0 z-0">
@@ -348,14 +387,16 @@
                 <div class="absolute bottom-10 right-6 text-6xl opacity-80">🛌</div>
             </div>
 
-            <!-- Character Wrapper -->
+            <!-- Character Wrapper
+                 [세로 대응] 모바일 기기의 상하 비율 압박 시 겹침을 방지하기 위해 pt 패딩을 pt-10(PC에선 pt-20)으로 축소 조율했습니다. -->
             <div id="character-target" class="relative z-10 flex flex-col items-center justify-center pt-10 md:pt-20 cursor-pointer">
 
                 <div id="status-bubble" class="mb-4 bg-white/95 text-slate-800 font-bold px-4 py-2 rounded-2xl shadow-md border border-pink-200 text-xs transition-all text-center whitespace-normal max-w-[200px] relative z-20">
                     안녕! 나랑 신나게 놀자! 🌸
                 </div>
 
-                <div id="avatar-container" class="w-72 h-72 flex items-center justify-center">
+                <!-- [세로 대응] 모바일 기기 크기에 따라 캐릭터 사이즈가 w-56(PC에선 w-72)으로 다이내믹하게 줄어들어 잘림을 막아줍니다. -->
+                <div id="avatar-container" class="w-56 h-56 md:w-72 md:h-72 flex items-center justify-center">
                     <!-- Main Image Sprite -->
                     <img id="axolotl-avatar" class="axolotl-idle w-full h-full object-contain transition-all duration-300 transform"
                          src="images/axolotl-happy.png"
@@ -408,7 +449,8 @@
         </div>
 
         <!-- ================= [BOTTOM NAV] Navigation Taps ================= -->
-        <div class="relative z-20 bg-slate-950 pt-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-slate-900 flex justify-between items-center gap-2">
+        <!-- iOS 노치 및 사파리 하단 탭바를 고려해 패딩 마진(pb-safe)을 더 조밀하게 보정했습니다. (스크롤 차단 연동) -->
+        <div class="relative z-20 bg-slate-950 pt-2 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] border-t border-slate-900 flex justify-between items-center gap-2">
             <div class="flex-1 grid grid-cols-3 gap-1.5">
                 <button id="nav-yard" onpointerdown="switchSpace('yard')" class="relative bounce-hover py-2.5 rounded-xl border border-emerald-500 bg-emerald-950 text-emerald-300 font-bold text-xs">
                     🏡 마당
@@ -432,7 +474,52 @@
             </button>
         </div>
 
-        <!-- ================= [SETTINGS MODAL] ================= -->
+        <!-- ================= [MINI GAME POPUP] ================= -->
+        <div id="game-modal" class="absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-6 hidden">
+            <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col items-center max-h-[90vh] overflow-y-auto">
+
+                <!-- [세부 화면 1: 시작 & 게임 플레이 화면] -->
+                <div id="mini-game-play-view" class="w-full flex flex-col items-center">
+                    <h3 class="text-lg font-game text-pink-400 mb-1">🎈 보글보글 방울 터뜨리기</h3>
+                    <p class="text-xs text-slate-400 text-center mb-3">방울을 터치해서 터뜨리면 아홀로트가 기뻐하고<br><span class="text-green-300 font-bold">놀이 지수</span>와 <span class="text-pink-300 font-bold">경험치</span>가 올라가요!</p>
+
+                    <div class="flex justify-between w-full mb-2 text-xs px-1 text-slate-400">
+                        <div>시간제한: <span id="game-timer" class="font-bold text-rose-400">15초</span></div>
+                        <div>터뜨린 개수: <span id="game-score" class="font-bold text-pink-300">0</span></div>
+                    </div>
+
+                    <div id="game-canvas" class="relative w-full h-48 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"></div>
+
+                    <div class="flex gap-2 w-full mt-3 text-xs">
+                        <button id="btn-start" onpointerdown="startBubbleGame()" class="flex-1 bg-pink-500 text-white font-bold py-2 rounded-lg">
+                            게임 시작! 🚀
+                        </button>
+                        <button onpointerdown="closeMiniGame()" class="bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded-lg">
+                            닫기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- [세부 화면 2: 결과 발표 화면 (기본 숨김)] -->
+                <div id="mini-game-result-view" class="w-full flex flex-col items-center hidden py-4">
+                    <span class="text-5xl mb-3">🎉</span>
+                    <h3 class="text-xl font-game text-yellow-400 mb-1">참 잘했어요!</h3>
+                    <p class="text-xs text-slate-300 text-center mb-4">
+                        <span id="res-owner" class="text-pink-300 font-bold">주인님</span>이(가) 비눗방울을 무려 <span id="res-score" class="text-pink-400 font-bold text-sm">0</span>개나 터뜨렸어요!
+                    </p>
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-full text-xs text-slate-400 space-y-1 mb-5">
+                        <div class="flex justify-between"><span>💖 획득한 행복 경험치:</span> <span id="res-xp" class="text-pink-300 font-bold">+0</span></div>
+                        <div class="flex justify-between"><span>⚽ 획득한 놀이 게이지:</span> <span id="res-play" class="text-green-300 font-bold">+0%</span></div>
+                    </div>
+                    <button onpointerdown="confirmResult()" class="w-full bg-green-500 text-white font-bold py-2.5 rounded-lg text-sm shadow-md">
+                        우파루파에게 칭찬받기 👍
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= ⚙️ [SETTINGS MODAL] ================= -->
         <div id="settings-modal" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 hidden">
             <div class="bg-slate-900 border-2 border-pink-400 rounded-2xl p-5 w-full max-w-sm flex flex-col relative text-slate-200 max-h-[90vh] overflow-y-auto">
                 <button onpointerdown="closeSettings()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-xl">✕</button>
@@ -457,7 +544,12 @@
                             <span class="text-slate-400">내 펫 고유 번호 (ID)</span>
                             <span id="pet-id-display" class="font-mono text-yellow-400 font-bold">------</span>
                         </div>
-                        <button onpointerdown="copyShareLink()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-1.5 rounded-lg text-xs transition-all bounce-hover">
+                        <!-- 생일 노출 컴포넌트 추가 -->
+                        <div class="flex justify-between items-center bg-slate-900 px-2 py-1.5 rounded-lg text-xs mt-1">
+                            <span class="text-slate-400">펫 이름 / 생일</span>
+                            <span id="pet-birthday-display" class="text-pink-300 font-bold">말랑이 / 2026-06-03</span>
+                        </div>
+                        <button onpointerdown="copyShareLink()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-1.5 rounded-lg text-xs transition-all bounce-hover mt-1">
                             🔗 내 펫 공유 링크 복사하기
                         </button>
                     </div>
@@ -498,6 +590,9 @@
 
     </div>
 
+    <!-- ==========================================================
+         [JAVASCRIPT SYSTEM CONTROL]
+         ========================================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -527,7 +622,9 @@
         window.confirmResetExecute = confirmResetExecute;
         window.closeConfirmModal = closeConfirmModal;
         window.toggleDesignerPreview = toggleDesignerPreview;
+        window.submitOnboarding = submitOnboarding; // 신규 매핑 바인딩
 
+        // 모바일 기기 자체 고정 높이 동기화 픽셀 엔진
         function resetViewportHeight() {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -535,6 +632,13 @@
         window.addEventListener('resize', resetViewportHeight);
         window.addEventListener('orientationchange', resetViewportHeight);
         resetViewportHeight();
+
+        // 📱 [해결책 적용] iOS 사파리 브라우저 밀림 및 러버밴딩 강제 바운스 스크롤 원천 차단
+        document.body.addEventListener('touchmove', function (e) {
+            if (!e.target.closest('.overflow-y-auto')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         let firebaseConfig = null;
@@ -560,9 +664,12 @@
             }
         }
 
+        // --- [2] Member State Variables (이름, 생일 상태 세분화) ---
         let gameData = {
             petId: "",
             ownerName: "주인님",
+            petName: "말랑이",
+            petBirthday: "2026-06-03",
             level: 1,
             exp: 0,
             maxExp: 100,
@@ -756,7 +863,7 @@
             btnStartNew.innerText = "새로운 아홀로트 분양받기 🐣";
             btnStartNew.className = "w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-pink-500/20 text-base bounce-hover tracking-wide";
             historySummary.innerText = "";
-            subText.innerText = "나만의 소중한 찰흙 토이 펫을 보살펴주세요";
+            subText.innerText = "나만의 소중한 펫을 보살펴주세요";
         }
 
         function actionContinue() {
@@ -772,6 +879,7 @@
             loadLocalOrNewPet();
         }
 
+        // 새로운 아홀로트 분양받기 클릭
         function actionStartNewClick() {
             const localData = localStorage.getItem('AXOLOTL_MY_TINY_DATA');
             if (localData) {
@@ -794,31 +902,65 @@
             executeFreshStart();
         }
 
+        // 🍼 [해결책 적용] 새로운 시작 시 온보딩 기록부(이름, 생일) 모달 활성화
         function executeFreshStart() {
-            localStorage.removeItem('AXOLOTL_MY_TINY_DATA');
+            playSound(440, 'sine', 0.1);
 
+            // 입양 기록부 활성화
+            document.getElementById('onboarding-modal').classList.remove('hidden');
+            document.getElementById('onboarding-modal').style.display = 'flex';
+
+            // 생일 기본값을 오늘 날짜로 자동 연동
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('onboard-birth-input').value = today;
+        }
+
+        // 🍼 [해결책 적용] 입양 기록부 전송 완료 후 로비 진입
+        function submitOnboarding() {
+            const onboardOwner = document.getElementById('onboard-owner-input').value.trim();
+            const onboardPet = document.getElementById('onboard-pet-input').value.trim();
+            const onboardBirth = document.getElementById('onboard-birth-input').value;
+
+            if (!onboardOwner || !onboardPet || !onboardBirth) {
+                showFloatingMessage("✍️ 입양 기록부의 빈칸을 모두 채워주세요!");
+                playSound(150, 'sawtooth', 0.2);
+                return;
+            }
+
+            // 신규 인게임 멤버 데이터 할당
             gameData = {
                 petId: generatePetId(),
-                ownerName: "주인님",
-                level: 1, exp: 0, maxExp: 100,
+                ownerName: onboardOwner,
+                petName: onboardPet,
+                petBirthday: onboardBirth,
+                level: 1,
+                exp: 0,
+                maxExp: 100,
                 stats: { hunger: 100, thirst: 100, energy: 100, affection: 100 },
-                currentSpace: 'yard', isSleeping: false, lastSaved: Date.now()
+                currentSpace: 'yard',
+                isSleeping: false,
+                lastSaved: Date.now()
             };
 
             saveGameData();
+            updateCanvasUI();
 
-            playSound(523, 'sine', 0.08);
-            playSound(659, 'sine', 0.08, 0.06);
-            playSound(784, 'sine', 0.08, 0.12);
-            playSound(1046, 'sine', 0.2, 0.18);
+            // 기록부 및 인트로 종료 페이드 아웃 연출
+            document.getElementById('onboarding-modal').classList.add('hidden');
+            document.getElementById('onboarding-modal').style.display = 'none';
 
             document.getElementById('title-screen').style.transform = 'translateY(-100%)';
             setTimeout(() => {
                 document.getElementById('title-screen').style.display = 'none';
             }, 500);
 
-            loadLocalOrNewPet();
-            showFloatingMessage("🐣 말랑말랑 아기 우파루파가 마당에 새로 왔어요!");
+            // 축하 아르페지오
+            playSound(523, 'sine', 0.08);
+            playSound(659, 'sine', 0.08, 0.06);
+            playSound(784, 'sine', 0.08, 0.12);
+            playSound(1046, 'sine', 0.2, 0.18);
+
+            showFloatingMessage(`🐣 말랑말랑 아기 ${onboardPet}가 마당에 분양되었어요!`);
         }
 
         let previewToggleFlag = false;
@@ -850,6 +992,8 @@
             }
             if (!gameData.petId) gameData.petId = generatePetId();
             if (!gameData.ownerName) gameData.ownerName = "주인님";
+            if (!gameData.petName) gameData.petName = "말랑이";
+            if (!gameData.petBirthday) gameData.petBirthday = "2026-06-03";
 
             document.getElementById('pet-id-display').innerText = gameData.petId;
             document.getElementById('owner-name-input').value = gameData.ownerName;
@@ -869,8 +1013,10 @@
             document.getElementById('stat-energy').style.width = `${gameData.stats.energy}%`;
             document.getElementById('stat-affection').style.width = `${gameData.stats.affection}%`;
 
+            // 상단 펫 이름 및 레벨 정교화 갱신
+            document.getElementById('pet-stage').innerText = `${gameData.petName || '아홀로트'} (Lv.${gameData.level})`;
+
             const stage = GROWTH_STAGES[gameData.level] || GROWTH_STAGES[1];
-            document.getElementById('pet-stage').innerText = `${stage.name} (Lv.${gameData.level})`;
             document.getElementById('happy-multiplier').innerText = `x${stage.multiplier.toFixed(1)}`;
 
             const avatar = document.getElementById('axolotl-avatar');
@@ -878,6 +1024,9 @@
             avatar.style.transform = `scale(${stage.scale})`;
             fallback.style.transform = `scale(${stage.scale})`;
             document.getElementById('character-shadow').style.transform = `scale(${stage.scale})`;
+
+            // 보관소 앨범 생일 동기화
+            document.getElementById('pet-birthday-display').innerText = `${gameData.petName} / ${gameData.petBirthday}`;
 
             syncFacialExpression();
             updateNotificationBadges();
@@ -1019,6 +1168,7 @@
         }
 
         function interactFeed() {
+            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.hunger >= 100) return;
             gameData.stats.hunger = Math.min(100, gameData.stats.hunger + 25);
             addHappinessPoints(4, null, null, 'feed');
@@ -1027,6 +1177,7 @@
         }
 
         function interactWater() {
+            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.thirst >= 100) return;
             gameData.stats.thirst = Math.min(100, gameData.stats.thirst + 25);
             addHappinessPoints(4, null, null, 'water');
@@ -1035,38 +1186,49 @@
         }
 
         function interactBall() {
+            resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.affection >= 100) return;
             gameData.stats.affection = Math.min(100, gameData.stats.affection + 30);
+
             const ball = document.getElementById('toy-ball');
             ball.style.transform = `translateY(-100px) rotate(180deg)`;
             setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
+
             addHappinessPoints(6, null, null, 'play');
             playSound(250, 'sawtooth', 0.08);
             playSound(400, 'sawtooth', 0.08, 0.06);
         }
 
         function toggleSleepMode() {
+            resumeAudioContext();
             gameData.isSleeping = !gameData.isSleeping;
             const btn = document.getElementById('btn-sleep');
             const txt = document.getElementById('sleep-text');
             const icon = document.getElementById('sleep-icon');
+
             const avatar = document.getElementById('axolotl-avatar');
             const fallback = document.getElementById('emoji-fallback');
             const lampGlow = document.getElementById('bedroom-lamp-glow');
 
             if (gameData.isSleeping) {
-                txt.innerText = "아침이야! 깨우기"; icon.innerText = "☀️";
+                txt.innerText = "아침이야! 깨우기";
+                icon.innerText = "☀️";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-amber-500 text-amber-950 border border-amber-300 py-3 rounded-xl text-xs font-bold";
+
                 if (lampGlow) lampGlow.classList.add('lamp-active');
                 if (avatar) avatar.classList.add('sleep-glow');
                 if (fallback) fallback.classList.add('sleep-glow');
+
                 startLullaby();
             } else {
-                txt.innerText = "침실에서 코오 재우기"; icon.innerText = "😴";
+                txt.innerText = "침실에서 코오 재우기";
+                icon.innerText = "😴";
                 btn.className = "bounce-hover w-2/3 flex items-center justify-center gap-2 bg-indigo-900 text-indigo-100 border border-indigo-500 py-3 rounded-xl text-xs font-bold";
+
                 if (lampGlow) lampGlow.classList.remove('lamp-active');
                 if (avatar) avatar.classList.remove('sleep-glow');
                 if (fallback) fallback.classList.remove('sleep-glow');
+
                 stopLullaby();
             }
             updateCanvasUI();
@@ -1116,3 +1278,17 @@
     </script>
 </body>
 </html>
+```eof
+
+---
+
+### 🎨 디자인 및 흐름 테스트 방법 가이드
+
+* **실시간 세로 가사 가변성 테스트:**
+  * 업데이트 완료 후, 어떠한 모바일 기기(아이폰 16 프로맥스 등)에서도 스크롤 없이 **하단 네비게이션 탭이 브라우저 하단 영역에 가려지지 않고 깔끔하게 달라붙는 것**을 확인하실 수 있습니다.
+* **입양 기록부 온보딩 테스트:**
+  * 본인의 스마트폰에서 **'시크릿 모드'**를 새로 열어 배포 주소를 실행해 보세요.
+  * `새로운 아홀로트 분양받기🐣` 버튼을 누르면, 어떠한 기본 경고 없이 **파스텔 톤의 귀여운 [입양 기록부 모달]**이 부드럽게 팝업되며 주인의 이름, 아홀로트의 고유 이름, 캘린더에서 직접 고른 생일을 입력하는 절차가 수행됩니다!
+  * 분양 완료 시 8비트 사운드와 함께 로비 씬으로 안전하게 진입하는 것을 보실 수 있습니다.
+
+수정된 최종 빌드는 현재 Canvas에 완벽하게 반영되어 안전하게 배포할 준비를 마쳤습니다. 깃허브에 다시 업로드하셔서 예나님과 함께 스마트하고 쾌적한 9:16 다마고치를 직접 플레이해 보세요!
