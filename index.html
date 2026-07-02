@@ -1159,6 +1159,34 @@
             setTimeout(() => p.remove(), 1600);
         }
 
+        // 경험치 지급 + 레벨업 판정 + 터치 위치 하트 연출을 담당하는 공용 함수
+        // (기존 코드에서 호출만 되고 정의가 누락되어 있던 함수를 신규 구현)
+        function addHappinessPoints(points, x = null, y = null, type = null) {
+            if (!points || points <= 0) return;
+
+            // 터치 좌표가 주어진 경우에만 하트/이모지 파티클 연출
+            if (x !== null && y !== null) {
+                spawnHeartParticle(x, y, type || 'touch');
+            }
+
+            gameData.exp += points;
+
+            // 현재 성장 단계의 임계치를 넘으면 다음 단계로 레벨업 (초과분은 이월)
+            let currentStage = GROWTH_STAGES[gameData.level];
+            while (currentStage && gameData.exp >= currentStage.threshold && GROWTH_STAGES[gameData.level + 1]) {
+                gameData.exp -= currentStage.threshold;
+                gameData.level++;
+                currentStage = GROWTH_STAGES[gameData.level];
+                showFloatingMessage(`🎉 레벨업! ${currentStage.name}(으)로 성장했어요!`);
+                playSound(880, 'triangle', 0.15);
+                playSound(1100, 'triangle', 0.15, 0.1);
+            }
+            gameData.maxExp = currentStage ? currentStage.threshold : gameData.maxExp;
+
+            updateCanvasUI();
+            saveGameData();
+        }
+
         function interactFeed() {
             resumeAudioContext();
             if (gameData.isSleeping || gameData.stats.hunger >= 100) return;
@@ -1312,8 +1340,8 @@
                     playSound(600 + (gameScore * 20), 'sine', 0.04);
                 });
                 cv.appendChild(b);
-                setTimeout(() => b.remove(), 2500);
-            }, 500);
+                setTimeout(() => b.remove(), 2800);
+            }, 700);
 
             const clock = setInterval(() => {
                 gameTimer--;
