@@ -1183,8 +1183,37 @@
             gameData.stats.affection = Math.min(100, gameData.stats.affection + 30);
 
             const ball = document.getElementById('toy-ball');
-            ball.style.transform = `translateY(-100px) rotate(180deg)`;
-            setTimeout(() => { ball.style.transform = `translateY(0) rotate(0)`; }, 350);
+            const avatar = document.getElementById('axolotl-avatar');
+
+            // 공과 아바타의 실제 화면 좌표 차이를 계산해, 공이 몸통 방향으로 던져지는 궤적을 만듭니다.
+            const ballRect = ball.getBoundingClientRect();
+            const avatarRect = avatar.getBoundingClientRect();
+            const deltaX = (avatarRect.left + avatarRect.width / 2) - (ballRect.left + ballRect.width / 2);
+            const deltaY = ((avatarRect.top + avatarRect.height / 2) - (ballRect.top + ballRect.height / 2)) * 0.65; // 몸통 중간 높이 정도로 살짝 낮게 조준
+
+            const THROW_MS = 250;
+            const FALL_MS = 350;
+
+            // 1단계: 아홀로트 몸통을 향해 던져지는 상승 궤적 (ease-out: 빠르게 튀어나갔다가 감속)
+            ball.style.transition = `transform ${THROW_MS}ms cubic-bezier(0.33, 0, 0.2, 1)`;
+            ball.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(260deg) scale(0.9)`;
+
+            setTimeout(() => {
+                // 충돌 순간: 아바타가 맞고 살짝 튀어오르는 반응 (기존 jump 모션 재활용)
+                avatar.classList.remove('axolotl-jump');
+                void avatar.offsetWidth; // reflow로 애니메이션 재시작 보장
+                avatar.classList.add('axolotl-jump');
+                playSound(180, 'square', 0.05);
+
+                // 2단계: 튕겨서 바닥(원래 자리)으로 낙하 (ease-in: 중력에 끌려 떨어지는 느낌)
+                ball.style.transition = `transform ${FALL_MS}ms cubic-bezier(0.6, 0, 0.85, 0.2)`;
+                ball.style.transform = `translate(0px, 0px) rotate(360deg) scale(1)`;
+            }, THROW_MS);
+
+            setTimeout(() => {
+                avatar.classList.remove('axolotl-jump');
+                ball.style.transition = '';
+            }, THROW_MS + FALL_MS + 50);
 
             addHappinessPoints(6, null, null, 'play');
             playSound(250, 'sawtooth', 0.08);
