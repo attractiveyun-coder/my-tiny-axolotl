@@ -285,7 +285,7 @@
         </div>
 
         <!-- ================= [MAIN GAME VIEW] Top Status Sliders ================= -->
-        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-8">
+        <div class="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent pt-[max(2rem,calc(env(safe-area-inset-top,0px)+0.5rem))]">
             <div class="flex justify-between items-center mb-2 px-1">
                 <div class="bg-pink-500/90 text-white font-bold px-3 py-1 rounded-full text-sm shadow-md tracking-wide">
                     👑 <span id="pet-stage">아기 아홀로트 (Lv.1)</span>
@@ -1436,15 +1436,15 @@
                         if (urlPetId) {
                             await loadPetFromCloud(urlPetId);
                         } else {
-                            loadLocalOrNewPet();
+                            setupTitleScreenFlow();
                         }
                     } else {
-                        loadLocalOrNewPet();
+                        setupTitleScreenFlow();
                     }
                 });
             } else {
-                // Firebase 미구동 시, 로컬 스토리지 데이터로 무중단 로딩 수행
-                loadLocalOrNewPet();
+                // Firebase 미구동 시, 로컬 스토리지 데이터 유무에 따라 이어하기/신규 분기 노출
+                setupTitleScreenFlow();
                 const statusLabel = document.getElementById('cloud-save-status');
                 if (statusLabel) {
                     statusLabel.innerText = "📴 로컬 단독 보관 모드로 작동 중";
